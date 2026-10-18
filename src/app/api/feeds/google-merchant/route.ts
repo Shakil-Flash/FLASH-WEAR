@@ -11,7 +11,7 @@ export async function GET() {
     .map((p) => {
       const totalInventory = p.variants?.reduce((sum, v) => sum + (v.inventory_quantity || 0), 0) || 0;
       const availability = totalInventory > 0 ? "in stock" : "out of stock";
-      const imageUrl = p.images?.[0]?.url || `${siteUrl}/images/placeholder.jpg`;
+      const imageUrl = p.images?.[0]?.url || `${siteUrl}/icon.svg`;
       const description = (p.description || "FLASHWEAR Streetwear Apparel")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
