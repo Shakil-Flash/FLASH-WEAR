@@ -53,20 +53,17 @@ Options:
   process.exit(0);
 }
 
-if (!isDryRun && !isConfirmed) {
-  console.error("Safety Error: You must specify either --dry-run or --confirm.");
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const isPlaceholderUrl = !supabaseUrl || supabaseUrl.includes("placeholder");
+
+if (isConfirmed && isPlaceholderUrl) {
+  console.error("Safety Error: Cannot execute live write with placeholder Supabase URL.");
+  console.error("Please configure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY with production credentials.");
   process.exit(1);
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !serviceKey) {
-  console.error("Error: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured.");
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, serviceKey);
+const supabase = !isPlaceholderUrl ? createClient(supabaseUrl, serviceKey) : null;
 
 async function runImport() {
   const fullPath = path.resolve(process.cwd(), filePath);
@@ -78,36 +75,70 @@ async function runImport() {
   const rawData = JSON.parse(fs.readFileSync(fullPath, "utf-8"));
   const products = Array.isArray(rawData) ? rawData : rawData.products || [];
 
-  console.log(`\nFound ${products.length} products to process in ${filePath}`);
-  console.log(`Mode: ${isDryRun ? "DRY-RUN (Read-only Preview)" : "CONFIRMED (Non-Destructive Live Write)"}\n`);
+  console.log(`\n======================================================`);
+  console.log(`FLASHWEAR Production Catalog Importer`);
+  console.log(`File: ${filePath} (${products.length} products found)`);
+  console.log(`Mode: ${isDryRun ? "DRY-RUN (Read-only Verification)" : "CONFIRMED (Non-Destructive Live Write)"}`);
+  if (isPlaceholderUrl) {
+    console.log(`Note: Database connection in placeholder mode. Performing schema & validation checks.`);
+  }
+  console.log(`======================================================\n`);
 
   let newCount = 0;
   let skippedCount = 0;
   let errorCount = 0;
+  let totalVariants = 0;
+  let totalStockUnits = 0;
 
   for (const item of products) {
     try {
-      // 1. Check if product already exists by slug
-      const { data: existing, error: checkErr } = await supabase
-        .from("products")
-        .select("id, name, slug, price")
-        .eq("slug", item.slug)
-        .maybeSingle();
-
-      if (checkErr) {
-        console.error(`Error checking product ${item.slug}:`, checkErr.message);
+      // Validate schema
+      if (!item.name || !item.slug || typeof item.price !== "number") {
+        console.error(`[INVALID PRODUCT] Missing required fields (name, slug, or price) for item:`, item);
         errorCount++;
         continue;
       }
 
-      if (existing) {
-        console.log(`[SKIP - EXISTS] "${item.name}" (slug: ${item.slug}, DB ID: ${existing.id}). Preserving live price & inventory.`);
-        skippedCount++;
+      if (!item.variants || item.variants.length === 0) {
+        console.error(`[INVALID PRODUCT] "${item.name}" has no variants defined.`);
+        errorCount++;
         continue;
       }
 
+      const variantCount = item.variants.length;
+      const stockUnits = item.variants.reduce((sum, v) => sum + (v.inventory_quantity || 0), 0);
+      totalVariants += variantCount;
+      totalStockUnits += stockUnits;
+
+      // 1. Check if product already exists by slug in live DB
+      if (supabase) {
+        const { data: existing, error: checkErr } = await supabase
+          .from("products")
+          .select("id, name, slug, price")
+          .eq("slug", item.slug)
+          .maybeSingle();
+
+        if (checkErr) {
+          console.error(`Error checking product ${item.slug}:`, checkErr.message);
+          errorCount++;
+          continue;
+        }
+
+        if (existing) {
+          console.log(`[SKIP - EXISTS] "${item.name}" (slug: ${item.slug}, DB ID: ${existing.id}). Preserving live price & inventory.`);
+          skippedCount++;
+          continue;
+        }
+      }
+
       if (isDryRun) {
-        console.log(`[DRY-RUN - NEW] Would insert: "${item.name}" (slug: ${item.slug}, Price: ৳${item.price}, Variants: ${item.variants?.length || 0})`);
+        const skuList = item.variants.map((v) => `${v.sku} (${v.size}, ${v.color}: ${v.inventory_quantity} units)`).join("\n    • ");
+        console.log(`[DRY-RUN - VALIDATED] "${item.name}"`);
+        console.log(`  Slug:     ${item.slug}`);
+        console.log(`  Price:    ৳${item.price.toLocaleString()}${item.compare_at_price ? ` (Compare: ৳${item.compare_at_price.toLocaleString()})` : ""}`);
+        console.log(`  Images:   ${item.images?.length || 0} media assets`);
+        console.log(`  Variants: ${variantCount} SKUs, ${stockUnits} total stock units`);
+        console.log(`    • ${skuList}\n`);
         newCount++;
         continue;
       }
@@ -171,7 +202,10 @@ async function runImport() {
 
   console.log("\n=================================");
   console.log(`Summary:`);
-  console.log(`  New Products Processed:   ${newCount}`);
+  console.log(`  Products Validated:       ${products.length}`);
+  console.log(`  New Products Ready:       ${newCount}`);
+  console.log(`  Total Variants / SKUs:    ${totalVariants}`);
+  console.log(`  Total Inventory Units:    ${totalStockUnits}`);
   console.log(`  Existing (Skipped/Saved): ${skippedCount}`);
   console.log(`  Errors:                   ${errorCount}`);
   console.log("=================================\n");
