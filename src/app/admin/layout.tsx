@@ -16,6 +16,12 @@ import {
   X,
   ExternalLink,
   Shield,
+  RotateCcw,
+  Tag,
+  BarChart3,
+  Award,
+  Share2,
+  Mail,
 } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -31,10 +37,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
     { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
+    { label: "Returns", href: "/admin/returns", icon: RotateCcw },
+    { label: "Loyalty", href: "/admin/loyalty", icon: Award },
+    { label: "Referrals", href: "/admin/referrals", icon: Share2 },
+    { label: "Marketing", href: "/admin/marketing", icon: Mail },
+    { label: "Discounts", href: "/admin/discounts", icon: Tag },
+    { label: "Reports & Funnel", href: "/admin/reports", icon: BarChart3 },
     { label: "Products", href: "/admin/products", icon: Package },
     { label: "Categories", href: "/admin/categories", icon: FolderTree },
     { label: "Collections", href: "/admin/collections", icon: Layers },
     { label: "Inventory", href: "/admin/inventory", icon: Boxes },
+    { label: "Operations & Health", href: "/admin/operations", icon: Shield },
     { label: "Store Settings", href: "/admin/settings", icon: Settings },
   ];
 
@@ -116,7 +129,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <ExternalLink className="w-3.5 h-3.5" />
           </Link>
           <button
-            onClick={() => {
+            onClick={async () => {
+              try {
+                await fetch("/api/admin/auth", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ action: "logout" }),
+                });
+              } catch {}
               localStorage.removeItem("flashwear_admin_auth");
               router.push("/admin/login");
             }}

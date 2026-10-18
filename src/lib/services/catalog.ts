@@ -231,3 +231,39 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     collection: INITIAL_COLLECTIONS.find((c) => c.id === found.collection_id) || null,
   };
 }
+
+export async function getProductById(id: string): Promise<Product | null> {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          *,
+          category:categories(*),
+          collection:collections(*),
+          images:product_images(*),
+          variants:product_variants(*)
+        `)
+        .eq("id", id)
+        .single();
+
+      if (!error && data) {
+        return data as Product;
+      }
+    } catch {}
+  }
+
+  const found = INITIAL_PRODUCTS.find((p) => p.id === id);
+  if (!found) return null;
+
+  return {
+    ...found,
+    category: INITIAL_CATEGORIES.find((c) => c.id === found.category_id) || null,
+    collection: INITIAL_COLLECTIONS.find((c) => c.id === found.collection_id) || null,
+  };
+}
+
+export async function getAllProducts(filters?: ProductFilters & { isPublished?: boolean }): Promise<Product[]> {
+  return getProducts(filters);
+}
+

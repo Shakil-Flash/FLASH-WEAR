@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Search, Menu, X, Shield, ArrowRight } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, Shield, ArrowRight, User } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 
 export function Navbar() {
@@ -89,6 +89,16 @@ export function Navbar() {
               <Search className="w-3.5 h-3.5" />
               <span>Search</span>
             </button>
+
+            {/* Customer Account Portal */}
+            <Link
+              href="/account"
+              className="p-2 text-zinc-400 hover:text-[#ccff00] transition-colors"
+              title="Customer Account"
+              aria-label="Customer Account"
+            >
+              <User className="w-5 h-5" />
+            </Link>
 
             {/* Admin entry point */}
             <Link
@@ -186,6 +196,13 @@ export function Navbar() {
             </div>
 
             <div className="pt-6 border-t border-zinc-800 space-y-3">
+              <Link
+                href="/account"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-xs uppercase font-bold text-[#ccff00]"
+              >
+                My Account (Orders &amp; Returns)
+              </Link>
               <Link
                 href="/about"
                 onClick={() => setMobileMenuOpen(false)}

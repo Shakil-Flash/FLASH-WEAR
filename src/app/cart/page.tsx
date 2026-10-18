@@ -1,17 +1,89 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT, calculateDeliveryFee } from "@/lib/utils/format-currency";
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Truck } from "lucide-react";
+import { trackViewCart } from "@/lib/analytics/ga4";
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Truck, Tag, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 
-export default function CartPage() {
-  const { items, removeItem, updateQuantity, subtotal, totalQuantity } = useCart();
+const FREE_SHIPPING_THRESHOLD = 3000;
+
+function CartContent() {
+  const searchParams = useSearchParams();
+  const { items, removeItem, updateQuantity, subtotal, totalQuantity, replaceCart } = useCart();
   const [selectedDivision, setSelectedDivision] = useState<"Dhaka" | "Outside Dhaka">("Dhaka");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountAmount: number;
+    message: string;
+  } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
 
   const deliveryFee = calculateDeliveryFee(selectedDivision);
-  const total = subtotal + (items.length > 0 ? deliveryFee : 0);
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const total = Math.max(0, subtotal - discountAmount + (items.length > 0 ? deliveryFee : 0));
+
+  const shippingProgress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
+  const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+
+  // Abandoned cart recovery from email link
+  useEffect(() => {
+    const recoverToken = searchParams?.get("recover");
+    if (recoverToken) {
+      fetch(`/api/cart/recover?token=${encodeURIComponent(recoverToken)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.cart?.items) {
+            replaceCart(data.cart.items);
+            setRecoveryNotice("Your saved cart has been recovered with current real-time prices & inventory!");
+          }
+        })
+        .catch((e) => console.error("Recovery failed:", e));
+    }
+  }, [searchParams, replaceCart]);
+
+  // Track View Cart
+  useEffect(() => {
+    if (items.length > 0) {
+      trackViewCart(items, subtotal);
+    }
+  }, []);
+
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponCode.trim()) return;
+
+    setCouponLoading(true);
+    setCouponError(null);
+
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode.trim(), subtotal }),
+      });
+      const data = await res.json();
+
+      if (data.valid) {
+        setAppliedCoupon({
+          code: data.code,
+          discountAmount: data.discountAmount,
+          message: data.message,
+        });
+      } else {
+        setCouponError(data.message || "Invalid coupon code");
+      }
+    } catch {
+      setCouponError("Failed to validate coupon");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -50,6 +122,37 @@ export default function CartPage() {
           <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
             Shopping Bag ({totalQuantity} Item{totalQuantity === 1 ? "" : "s"})
           </h1>
+        </div>
+
+        {recoveryNotice && (
+          <div className="mt-6 p-4 bg-emerald-950/40 border border-emerald-800 text-emerald-300 text-xs font-mono flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-400" />
+            <div>
+              <p className="font-bold">Cart Recovered</p>
+              <p>{recoveryNotice}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Free Nationwide Shipping Progress Bar */}
+        <div className="mt-6 p-4 bg-[#111113] border border-zinc-800 space-y-2">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="flex items-center gap-2 text-zinc-300">
+              <Truck className="w-4 h-4 text-[#ccff00]" />
+              {amountToFreeShipping === 0 ? (
+                <span className="text-[#ccff00] font-bold">🎉 Congratulations! You unlocked FREE Nationwide Delivery!</span>
+              ) : (
+                <span>Add <strong className="text-white font-bold">{formatBDT(amountToFreeShipping)}</strong> more to your bag for FREE Delivery!</span>
+              )}
+            </span>
+            <span className="text-zinc-500 font-bold">{shippingProgress}%</span>
+          </div>
+          <div className="w-full h-2 bg-zinc-800 overflow-hidden">
+            <div
+              className="h-full bg-[#ccff00] transition-all duration-300"
+              style={{ width: `${shippingProgress}%` }}
+            />
+          </div>
         </div>
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -100,28 +203,28 @@ export default function CartPage() {
                 </div>
 
                 {/* Unit Price */}
-                <div className="col-span-2 sm:text-center text-xs font-mono text-zinc-300">
+                <div className="col-span-2 sm:text-center font-mono text-xs text-zinc-300">
                   <span className="sm:hidden text-zinc-500">Unit: </span>
                   {formatBDT(item.unitPrice)}
                 </div>
 
                 {/* Quantity Controls */}
-                <div className="col-span-2 flex sm:justify-center">
+                <div className="col-span-2 flex sm:justify-center items-center gap-2">
                   <div className="flex items-center border border-zinc-800 bg-zinc-900">
                     <button
                       onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                      className="p-2 text-zinc-400 hover:text-white"
+                      className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
                       aria-label="Decrease quantity"
                     >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="px-3 text-xs font-mono font-medium text-white">
+                    <span className="px-3 font-mono text-xs font-semibold text-white">
                       {item.quantity}
                     </span>
                     <button
                       onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                       disabled={item.quantity >= item.maxInventory}
-                      className="p-2 text-zinc-400 hover:text-white disabled:opacity-30"
+                      className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-30 transition-colors"
                       aria-label="Increase quantity"
                     >
                       <Plus className="w-3 h-3" />
@@ -139,17 +242,72 @@ export default function CartPage() {
           </div>
 
           {/* Order Summary Sidebar */}
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-4 space-y-6">
             <div className="p-6 bg-[#111113] border border-zinc-800 sticky top-28 space-y-6">
               <h2 className="text-sm font-mono uppercase tracking-widest font-bold text-white border-b border-zinc-800 pb-3">
                 Order Summary
               </h2>
 
-              <div className="space-y-3 text-xs">
+              {/* Coupon Box */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                  Promotional Coupon
+                </label>
+                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                    <input
+                      type="text"
+                      placeholder="FLASH10, WELCOME200"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className="w-full bg-[#18181b] border border-zinc-700 pl-8 pr-2 py-2 text-xs font-mono uppercase text-white focus:outline-none focus:border-[#ccff00]"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-xs font-bold uppercase text-white transition-colors"
+                  >
+                    {couponLoading ? "..." : "Apply"}
+                  </button>
+                </form>
+
+                {appliedCoupon && (
+                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <strong>{appliedCoupon.code} applied!</strong>
+                    </span>
+                    <button
+                      onClick={() => setAppliedCoupon(null)}
+                      className="text-zinc-400 hover:text-white"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
+
+                {couponError && (
+                  <div className="p-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{couponError}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 text-xs border-t border-zinc-800 pt-3">
                 <div className="flex justify-between text-zinc-400">
                   <span>Subtotal</span>
                   <span className="font-mono text-white">{formatBDT(subtotal)}</span>
                 </div>
+
+                {appliedCoupon && (
+                  <div className="flex justify-between text-emerald-400 font-bold">
+                    <span>Discount ({appliedCoupon.code})</span>
+                    <span className="font-mono">-{formatBDT(discountAmount)}</span>
+                  </div>
+                )}
 
                 {/* Delivery Selector Preview */}
                 <div className="space-y-2 pt-2 border-t border-zinc-800/80">
@@ -189,7 +347,7 @@ export default function CartPage() {
 
               <div className="space-y-3">
                 <Link
-                  href="/checkout"
+                  href={`/checkout${appliedCoupon ? `?coupon=${appliedCoupon.code}` : ""}`}
                   className="w-full h-12 bg-[#ccff00] hover:bg-[#b8e600] text-black font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition-all shadow-md"
                 >
                   <span>Proceed to Checkout</span>
@@ -199,7 +357,7 @@ export default function CartPage() {
                 <div className="p-3 bg-zinc-900/80 border border-zinc-800 text-[11px] text-zinc-400 flex items-start gap-2">
                   <Truck className="w-4 h-4 text-[#ccff00] flex-shrink-0 mt-0.5" />
                   <span>
-                    Cash on Delivery (COD) payment will be collected at your address upon delivery.
+                    Cash on Delivery & Online SSLCOMMERZ Payments available across all 64 districts.
                   </span>
                 </div>
               </div>
@@ -208,5 +366,22 @@ export default function CartPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CartPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-[#0a0a0b] min-h-screen py-24 text-center text-zinc-400 font-mono text-xs flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
+            <span>LOADING SHOPPING BAG...</span>
+          </div>
+        </div>
+      }
+    >
+      <CartContent />
+    </Suspense>
   );
 }

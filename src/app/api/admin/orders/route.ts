@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { updateAdminOrderStatus, cancelOrderAndRestoreStock } from "@/lib/services/orders";
+import { requireAdmin } from "@/lib/auth/server";
 
 export async function PATCH(request: Request) {
+  const auth = await requireAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   try {
     const body = await request.json();
     const { orderId, action, status, trackingNumber, adminNotes } = body;

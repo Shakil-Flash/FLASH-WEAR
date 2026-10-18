@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useId } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT, calculateDeliveryFee } from "@/lib/utils/format-currency";
@@ -13,7 +13,16 @@ import {
   ShoppingBag,
   CheckCircle2,
   Lock,
+  CreditCard,
+  Banknote,
+  Tag,
+  MapPin,
+  Award,
+  Users,
+  Gift,
+  Sparkles,
 } from "lucide-react";
+import { trackBeginCheckout, trackApplyCoupon } from "@/lib/analytics/ga4";
 
 const BD_DIVISIONS = [
   "Dhaka",
@@ -26,9 +35,10 @@ const BD_DIVISIONS = [
   "Mymensingh",
 ];
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
-  const { items, subtotal, clearCart } = useCart();
+  const searchParams = useSearchParams();
+  const { items, subtotal, clearCart, replaceCart } = useCart();
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -38,12 +48,196 @@ export default function CheckoutPage() {
     district: "",
     deliveryAddress: "",
     orderNotes: "",
+    paymentMethod: "cash_on_delivery" as "cash_on_delivery" | "sslcommerz",
     agreedToTerms: false,
   });
 
+  // Track begin checkout
+  useEffect(() => {
+    if (items.length > 0) {
+      trackBeginCheckout(items, subtotal);
+    }
+  }, []);
+
+  // Recover abandoned cart from resume link
+  useEffect(() => {
+    const recoverToken = searchParams?.get("recover");
+    if (recoverToken) {
+      fetch(`/api/cart/recover?token=${encodeURIComponent(recoverToken)}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success && data.cart?.items) {
+            replaceCart(data.cart.items);
+            if (data.cart.email) {
+              setFormData((prev) => ({
+                ...prev,
+                customerEmail: data.cart.email || prev.customerEmail,
+                customerName: data.cart.customerName || prev.customerName,
+                customerPhone: data.cart.phone || prev.customerPhone,
+              }));
+            }
+          }
+        })
+        .catch((err) => console.error("Abandoned cart recovery failed:", err));
+    }
+  }, [searchParams, replaceCart]);
+
+  // Debounced abandoned cart tracking (auto-records cart when customer enters email/phone)
+  useEffect(() => {
+    if ((!formData.customerEmail && !formData.customerPhone) || items.length === 0) return;
+    const timer = setTimeout(() => {
+      fetch("/api/cart/abandoned", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.customerEmail || undefined,
+          phone: formData.customerPhone || undefined,
+          customerName: formData.customerName || undefined,
+          items: items.map((i) => ({
+            variantId: i.variantId,
+            productId: i.productId,
+            productName: i.productName,
+            productSlug: i.productSlug,
+            size: i.size,
+            color: i.color,
+            unitPrice: i.unitPrice,
+            quantity: i.quantity,
+            imageUrl: i.imageUrl,
+          })),
+          subtotal,
+        }),
+      }).catch(() => {});
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [formData.customerEmail, formData.customerPhone, formData.customerName, items, subtotal]);
+
+  // Coupon State
+  const [couponCode, setCouponCode] = useState(searchParams?.get("coupon") || "");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountAmount: number;
+    message: string;
+  } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  // Loyalty Points State
+  const [loyaltyData, setLoyaltyData] = useState<{
+    availablePoints: number;
+    settings: {
+      is_active: boolean;
+      points_per_100_bdt: number;
+      point_value_bdt: number;
+      min_redemption_points: number;
+      max_redemption_points: number;
+      can_combine_with_coupon: boolean;
+    };
+  } | null>(null);
+  const [pointsToRedeemInput, setPointsToRedeemInput] = useState<number>(0);
+  const [appliedPoints, setAppliedPoints] = useState<number>(0);
+  const [loyaltyError, setLoyaltyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/account/rewards")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.availablePoints !== undefined) {
+          setLoyaltyData({
+            availablePoints: data.availablePoints,
+            settings: data.settings,
+          });
+          if (data.availablePoints >= (data.settings?.min_redemption_points || 100)) {
+            setPointsToRedeemInput(
+              Math.min(data.availablePoints, data.settings?.max_redemption_points || 1000)
+            );
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleApplyLoyaltyPoints = () => {
+    setLoyaltyError(null);
+    if (!loyaltyData || !loyaltyData.settings?.is_active) {
+      setLoyaltyError("Loyalty program is currently inactive.");
+      return;
+    }
+    if (appliedCoupon && !loyaltyData.settings.can_combine_with_coupon) {
+      setLoyaltyError("Loyalty points cannot be combined with a coupon code on this order.");
+      return;
+    }
+    if (pointsToRedeemInput < (loyaltyData.settings.min_redemption_points || 100)) {
+      setLoyaltyError(`Minimum ${loyaltyData.settings.min_redemption_points} points required to redeem.`);
+      return;
+    }
+    if (pointsToRedeemInput > (loyaltyData.settings.max_redemption_points || 1000)) {
+      setLoyaltyError(`Maximum ${loyaltyData.settings.max_redemption_points} points can be redeemed per order.`);
+      return;
+    }
+    if (pointsToRedeemInput > loyaltyData.availablePoints) {
+      setLoyaltyError(`You only have ${loyaltyData.availablePoints} points available.`);
+      return;
+    }
+    setAppliedPoints(pointsToRedeemInput);
+  };
+
+  // Referral Code State
+  const [referralCodeInput, setReferralCodeInput] = useState(
+    searchParams?.get("ref") || searchParams?.get("referral") || ""
+  );
+  const [appliedReferral, setAppliedReferral] = useState<{
+    code: string;
+    discountAmount: number;
+    message: string;
+  } | null>(null);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [referralError, setReferralError] = useState<string | null>(null);
+
+  const handleValidateReferral = useCallback(async (codeToValidate: string) => {
+    if (!codeToValidate.trim()) return;
+    setReferralLoading(true);
+    setReferralError(null);
+    try {
+      const res = await fetch("/api/account/referrals/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: codeToValidate.trim().toUpperCase(),
+          email: formData.customerEmail || undefined,
+          phone: formData.customerPhone || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setAppliedReferral({
+          code: data.code,
+          discountAmount: data.discountAmount,
+          message: data.message,
+        });
+      } else {
+        setReferralError(data.message || "Invalid referral code");
+      }
+    } catch {
+      setReferralError("Failed to validate referral code");
+    } finally {
+      setReferralLoading(false);
+    }
+  }, [formData.customerEmail, formData.customerPhone]);
+
+  // Auto-validate referral code if passed in query
+  useEffect(() => {
+    const refQuery = searchParams?.get("ref") || searchParams?.get("referral");
+    if (refQuery && !appliedReferral) {
+      handleValidateReferral(refQuery);
+    }
+  }, [searchParams, appliedReferral, handleValidateReferral]);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionError, setSubmissionError] = useState("");
+  const [submissionError, setSubmissionError] = useState(
+    searchParams?.get("payment_error") || ""
+  );
 
   // Idempotency token to prevent duplicate double-clicks
   const [idempotencyKey] = useState(
@@ -51,7 +245,51 @@ export default function CheckoutPage() {
   );
 
   const deliveryFee = calculateDeliveryFee(formData.division);
-  const totalAmount = subtotal + (items.length > 0 ? deliveryFee : 0);
+  const couponDiscount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const loyaltyPointValue = loyaltyData?.settings?.point_value_bdt || 1.0;
+  const loyaltyDiscount = appliedPoints > 0 ? Number((appliedPoints * loyaltyPointValue).toFixed(2)) : 0;
+  const referralDiscount = appliedReferral ? appliedReferral.discountAmount : 0;
+  const totalDiscounts = Math.min(subtotal, couponDiscount + loyaltyDiscount + referralDiscount);
+  const totalAmount = Math.max(0, subtotal - totalDiscounts + (items.length > 0 ? deliveryFee : 0));
+
+  const handleValidateCoupon = useCallback(async (codeToValidate: string) => {
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: codeToValidate.trim(), subtotal, email: formData.customerEmail }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setAppliedCoupon({
+          code: data.code,
+          discountAmount: data.discountAmount,
+          message: data.message,
+        });
+        trackApplyCoupon(data.code, data.discountAmount);
+        // If loyalty points were applied and combination is not allowed, clear loyalty points
+        if (loyaltyData?.settings && !loyaltyData.settings.can_combine_with_coupon) {
+          setAppliedPoints(0);
+        }
+      } else {
+        setCouponError(data.message || "Invalid coupon code");
+      }
+    } catch {
+      setCouponError("Failed to validate coupon");
+    } finally {
+      setCouponLoading(false);
+    }
+  }, [subtotal, formData.customerEmail, loyaltyData]);
+
+  // Automatically validate coupon if passed in query
+  useEffect(() => {
+    const code = searchParams?.get("coupon");
+    if (code && subtotal > 0 && !appliedCoupon) {
+      handleValidateCoupon(code);
+    }
+  }, [subtotal, searchParams, appliedCoupon, handleValidateCoupon]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -63,7 +301,6 @@ export default function CheckoutPage() {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
-    // Clear field error
     if (errors[name]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -103,7 +340,7 @@ export default function CheckoutPage() {
     }
 
     if (!formData.agreedToTerms) {
-      errs.agreedToTerms = "You must agree to the Cash on Delivery terms to proceed.";
+      errs.agreedToTerms = "You must agree to the order terms to proceed.";
     }
 
     setErrors(errs);
@@ -127,6 +364,7 @@ export default function CheckoutPage() {
 
     try {
       const payload = {
+        userId: "usr-demo",
         customerName: formData.customerName.trim(),
         customerPhone: formData.customerPhone.trim(),
         customerEmail: formData.customerEmail ? formData.customerEmail.trim() : undefined,
@@ -134,6 +372,10 @@ export default function CheckoutPage() {
         district: formData.district.trim(),
         deliveryAddress: formData.deliveryAddress.trim(),
         orderNotes: formData.orderNotes ? formData.orderNotes.trim() : undefined,
+        paymentMethod: formData.paymentMethod,
+        couponCode: appliedCoupon?.code,
+        loyaltyPointsToRedeem: appliedPoints > 0 ? appliedPoints : undefined,
+        referralCode: appliedReferral?.code,
         idempotencyKey,
         items: items.map((i) => ({
           variantId: i.variantId,
@@ -153,7 +395,28 @@ export default function CheckoutPage() {
         throw new Error(data.error || "Failed to process your order.");
       }
 
-      // Order created successfully! Clear cart & redirect to confirmation
+      // If Online Payment (SSLCOMMERZ) chosen, initiate payment gateway
+      if (formData.paymentMethod === "sslcommerz") {
+        const initRes = await fetch("/api/payments/sslcommerz/init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: data.orderId,
+            orderNumber: data.orderNumber,
+          }),
+        });
+
+        const initData = await initRes.json();
+        if (initRes.ok && initData.redirectUrl) {
+          clearCart();
+          window.location.href = initData.redirectUrl;
+          return;
+        } else {
+          throw new Error(initData.error || "Payment gateway connection failed.");
+        }
+      }
+
+      // Cash on Delivery success: Clear cart & redirect to confirmation
       clearCart();
       router.push(`/order-confirmation/${data.orderNumber}?token=${data.receiptToken}`);
     } catch (err: any) {
@@ -197,33 +460,30 @@ export default function CheckoutPage() {
             <span>/</span>
             <Link href="/cart" className="hover:text-white">Cart</Link>
             <span>/</span>
-            <span className="text-[#ccff00]">Cash on Delivery Checkout</span>
+            <span className="text-[#ccff00]">Checkout</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-            Guest Checkout
+            Secure Order Checkout
           </h1>
-          <p className="text-xs font-mono text-zinc-400 mt-1">
-            Cash on Delivery (COD) • No Advance Payment Required
-          </p>
         </div>
 
         {submissionError && (
-          <div className="mt-6 p-4 bg-red-950/40 border border-red-800 flex items-start gap-3 text-red-300 text-xs font-mono">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-400" />
+          <div className="mt-6 p-4 bg-red-950/40 border border-red-800 text-red-300 text-xs font-mono flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-400" />
             <div>
-              <strong className="block text-red-200">Checkout Error</strong>
-              <span>{submissionError}</span>
+              <p className="font-bold">Checkout Notice</p>
+              <p>{submissionError}</p>
             </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Customer Details Form (Left Column) */}
+          {/* Customer & Shipping Inputs (Left Column) */}
           <div className="lg:col-span-7 space-y-8">
             {/* Contact Details */}
             <div className="p-6 bg-[#111113] border border-zinc-800/90 space-y-4">
               <h2 className="text-sm font-mono uppercase tracking-widest font-bold text-white border-b border-zinc-800 pb-3">
-                1. Customer & Delivery Contact
+                1. Customer &amp; Notification Contact
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -236,7 +496,7 @@ export default function CheckoutPage() {
                     name="customerName"
                     value={formData.customerName}
                     onChange={handleChange}
-                    placeholder="e.g., Tanvir Hasan"
+                    placeholder="e.g. Tanzim Shakil"
                     className={`w-full bg-[#18181b] border px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#ccff00] ${
                       errors.customerName ? "border-red-500" : "border-zinc-700"
                     }`}
@@ -248,14 +508,14 @@ export default function CheckoutPage() {
 
                 <div className="space-y-1.5">
                   <label className="block text-xs uppercase font-mono text-zinc-400">
-                    Bangladesh Phone <span className="text-red-400">*</span>
+                    Phone (Courier Contact) <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="tel"
                     name="customerPhone"
                     value={formData.customerPhone}
                     onChange={handleChange}
-                    placeholder="017XXXXXXXX"
+                    placeholder="01712345678"
                     className={`w-full bg-[#18181b] border px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#ccff00] ${
                       errors.customerPhone ? "border-red-500" : "border-zinc-700"
                     }`}
@@ -268,14 +528,14 @@ export default function CheckoutPage() {
 
               <div className="space-y-1.5">
                 <label className="block text-xs uppercase font-mono text-zinc-400">
-                  Email Address <span className="text-zinc-500">(Optional - for dispatch updates)</span>
+                  Email Address <span className="text-zinc-500">(For order confirmation receipt)</span>
                 </label>
                 <input
                   type="email"
                   name="customerEmail"
                   value={formData.customerEmail}
                   onChange={handleChange}
-                  placeholder="tanvir@example.com"
+                  placeholder="name@example.com"
                   className={`w-full bg-[#18181b] border px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#ccff00] ${
                     errors.customerEmail ? "border-red-500" : "border-zinc-700"
                   }`}
@@ -289,7 +549,7 @@ export default function CheckoutPage() {
             {/* Delivery Address */}
             <div className="p-6 bg-[#111113] border border-zinc-800/90 space-y-4">
               <h2 className="text-sm font-mono uppercase tracking-widest font-bold text-white border-b border-zinc-800 pb-3">
-                2. Shipping Address (Bangladesh)
+                2. Shipping Destination (Bangladesh)
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -365,24 +625,73 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Payment Method Notice */}
+            {/* Payment Method Selector */}
             <div className="p-6 bg-[#111113] border border-zinc-800/90 space-y-4">
               <h2 className="text-sm font-mono uppercase tracking-widest font-bold text-white border-b border-zinc-800 pb-3">
-                3. Payment Selection
+                3. Payment Method Selection
               </h2>
 
-              <div className="p-4 border-2 border-[#ccff00] bg-zinc-950 flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-[#ccff00] text-black flex items-center justify-center font-bold text-xs mt-0.5">
-                  ✓
-                </div>
-                <div>
-                  <h4 className="text-xs uppercase font-mono font-bold text-white">
-                    Cash on Delivery (COD)
-                  </h4>
-                  <p className="text-xs text-zinc-400 mt-1">
-                    Pay the total amount in Bangladeshi Taka (৳) to the courier rider upon delivery to your doorstep. You can inspect the package exterior prior to hand-off.
-                  </p>
-                </div>
+              <div className="space-y-3">
+                {/* Cash on Delivery Option */}
+                <label
+                  className={`p-4 border-2 flex items-start gap-3.5 cursor-pointer transition-colors ${
+                    formData.paymentMethod === "cash_on_delivery"
+                      ? "border-[#ccff00] bg-zinc-950"
+                      : "border-zinc-800 bg-[#161619] hover:border-zinc-700"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="cash_on_delivery"
+                    checked={formData.paymentMethod === "cash_on_delivery"}
+                    onChange={() => setFormData({ ...formData, paymentMethod: "cash_on_delivery" })}
+                    className="accent-[#ccff00] mt-1 w-4 h-4"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Banknote className="w-4 h-4 text-[#ccff00]" />
+                      <h4 className="text-xs uppercase font-mono font-bold text-white">
+                        Cash on Delivery (COD)
+                      </h4>
+                    </div>
+                    <p className="text-xs text-zinc-400 mt-1">
+                      Pay in cash upon doorstep delivery to your location in {formData.district || formData.division}.
+                    </p>
+                  </div>
+                </label>
+
+                {/* Online Payment Option */}
+                <label
+                  className={`p-4 border-2 flex items-start gap-3.5 cursor-pointer transition-colors ${
+                    formData.paymentMethod === "sslcommerz"
+                      ? "border-[#ccff00] bg-zinc-950"
+                      : "border-zinc-800 bg-[#161619] hover:border-zinc-700"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="sslcommerz"
+                    checked={formData.paymentMethod === "sslcommerz"}
+                    onChange={() => setFormData({ ...formData, paymentMethod: "sslcommerz" })}
+                    className="accent-[#ccff00] mt-1 w-4 h-4"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-[#ccff00]" />
+                      <h4 className="text-xs uppercase font-mono font-bold text-white">
+                        Online Payment (SSLCOMMERZ Hosted)
+                      </h4>
+                      <span className="text-[10px] bg-[#ccff00] text-black font-bold px-1.5 py-0.2 rounded font-mono">
+                        Instant
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-400 mt-1">
+                      Pay instantly via bKash, Nagad, Rocket, Visa, Mastercard, AMEX, or Bangladeshi Internet Banking.
+                    </p>
+                  </div>
+                </label>
               </div>
 
               <div className="pt-2">
@@ -395,8 +704,8 @@ export default function CheckoutPage() {
                     className="mt-1 w-4 h-4 accent-[#ccff00]"
                   />
                   <span className="text-xs text-zinc-400 leading-relaxed">
-                    I acknowledge that I am placing a genuine Cash on Delivery order with FLASHWEAR. I agree to receive the parcel and make the full payment of{" "}
-                    <strong className="text-white">{formatBDT(totalAmount)}</strong> upon delivery.
+                    I acknowledge that I am placing a genuine order with FLASHWEAR for{" "}
+                    <strong className="text-white">{formatBDT(totalAmount)}</strong>.
                   </span>
                 </label>
                 {errors.agreedToTerms && (
@@ -414,7 +723,7 @@ export default function CheckoutPage() {
               </h2>
 
               {/* Items List */}
-              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
                 {items.map((item) => (
                   <div
                     key={item.variantId}
@@ -442,20 +751,209 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Coupon Box in Checkout */}
+              <div className="space-y-2 pt-2 border-t border-zinc-800">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                  Have a Coupon?
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                    <input
+                      type="text"
+                      placeholder="FLASH10, WELCOME200"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className="w-full bg-[#18181b] border border-zinc-700 pl-8 pr-2 py-2 text-xs font-mono uppercase text-white focus:outline-none focus:border-[#ccff00]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleValidateCoupon(couponCode)}
+                    disabled={couponLoading || !couponCode.trim()}
+                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-xs font-bold uppercase text-white transition-colors"
+                  >
+                    {couponLoading ? "..." : "Apply"}
+                  </button>
+                </div>
+
+                {appliedCoupon && (
+                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <strong>{appliedCoupon.code} applied!</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAppliedCoupon(null)}
+                      className="text-zinc-400 hover:text-white"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
+
+                {couponError && (
+                  <div className="p-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{couponError}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Loyalty Rewards Redemption Box */}
+              {loyaltyData?.settings?.is_active && (
+                <div className="space-y-2 pt-2 border-t border-zinc-800">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                      <Award className="w-3.5 h-3.5 text-[#ccff00]" />
+                      <span>Loyalty Points</span>
+                    </label>
+                    <span className="text-[11px] font-mono text-[#ccff00]">
+                      {loyaltyData.availablePoints} pts available
+                    </span>
+                  </div>
+
+                  {appliedPoints > 0 ? (
+                    <div className="p-2 bg-[#ccff00]/10 border border-[#ccff00]/30 text-[#ccff00] text-[11px] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 font-mono">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <strong>{appliedPoints} pts applied (-{formatBDT(loyaltyDiscount)})</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setAppliedPoints(0)}
+                        className="text-zinc-400 hover:text-white"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min={loyaltyData.settings.min_redemption_points || 100}
+                          max={Math.min(loyaltyData.availablePoints, loyaltyData.settings.max_redemption_points || 1000)}
+                          value={pointsToRedeemInput || ""}
+                          onChange={(e) => setPointsToRedeemInput(parseInt(e.target.value) || 0)}
+                          placeholder={`Min ${loyaltyData.settings.min_redemption_points || 100} pts`}
+                          className="w-full bg-[#18181b] border border-zinc-700 px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-[#ccff00]"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyLoyaltyPoints}
+                          disabled={
+                            loyaltyData.availablePoints < (loyaltyData.settings.min_redemption_points || 100) ||
+                            (appliedCoupon !== null && !loyaltyData.settings.can_combine_with_coupon)
+                          }
+                          className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-xs font-bold uppercase text-white transition-colors"
+                        >
+                          Redeem
+                        </button>
+                      </div>
+                      {appliedCoupon && !loyaltyData.settings.can_combine_with_coupon && (
+                        <p className="text-[10px] text-zinc-500 font-mono">
+                          Note: Points cannot be combined with a coupon code.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {loyaltyError && (
+                    <div className="p-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{loyaltyError}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Referral Code Box */}
+              <div className="space-y-2 pt-2 border-t border-zinc-800">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-[#ccff00]" />
+                  <span>Friend Referral Code</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. FLASH-94287"
+                    value={referralCodeInput}
+                    onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                    className="w-full bg-[#18181b] border border-zinc-700 px-3 py-2 text-xs font-mono uppercase text-white focus:outline-none focus:border-[#ccff00]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleValidateReferral(referralCodeInput)}
+                    disabled={referralLoading || !referralCodeInput.trim()}
+                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-xs font-bold uppercase text-white transition-colors"
+                  >
+                    {referralLoading ? "..." : "Claim"}
+                  </button>
+                </div>
+
+                {appliedReferral && (
+                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <strong>{appliedReferral.message}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAppliedReferral(null)}
+                      className="text-zinc-400 hover:text-white"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
+
+                {referralError && (
+                  <div className="p-2 bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{referralError}</span>
+                  </div>
+                )}
+              </div>
+
               {/* Cost Breakdown */}
-              <div className="space-y-2 text-xs pt-2">
+              <div className="space-y-2 text-xs pt-2 border-t border-zinc-800">
                 <div className="flex justify-between text-zinc-400">
                   <span>Subtotal</span>
                   <span className="font-mono text-white">{formatBDT(subtotal)}</span>
                 </div>
+
+                {appliedCoupon && (
+                  <div className="flex justify-between text-emerald-400 font-bold">
+                    <span>Coupon Discount ({appliedCoupon.code})</span>
+                    <span className="font-mono">-{formatBDT(couponDiscount)}</span>
+                  </div>
+                )}
+
+                {appliedPoints > 0 && (
+                  <div className="flex justify-between text-[#ccff00] font-bold">
+                    <span>Loyalty Points ({appliedPoints} pts)</span>
+                    <span className="font-mono">-{formatBDT(loyaltyDiscount)}</span>
+                  </div>
+                )}
+
+                {appliedReferral && (
+                  <div className="flex justify-between text-emerald-400 font-bold">
+                    <span>Referral Discount ({appliedReferral.code})</span>
+                    <span className="font-mono">-{formatBDT(referralDiscount)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-zinc-400">
                   <span>
                     Delivery Fee ({formData.division === "Dhaka" ? "Dhaka City" : "Outside Dhaka"})
                   </span>
                   <span className="font-mono text-white">{formatBDT(deliveryFee)}</span>
                 </div>
+
                 <div className="pt-3 border-t border-zinc-800 flex justify-between items-baseline font-bold text-sm">
-                  <span className="uppercase tracking-wider text-white">Total Amount (COD)</span>
+                  <span className="uppercase tracking-wider text-white">Total Amount</span>
                   <span className="font-mono text-xl text-[#ccff00]">
                     {formatBDT(totalAmount)}
                   </span>
@@ -471,12 +969,18 @@ export default function CheckoutPage() {
                 {isSubmitting ? (
                   <span className="flex items-center gap-2 font-mono">
                     <span className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full" />
-                    CONFIRMING ORDER WITH WAREHOUSE...
+                    {formData.paymentMethod === "sslcommerz"
+                      ? "REDIRECTING TO SSLCOMMERZ..."
+                      : "CONFIRMING ORDER..."}
                   </span>
                 ) : (
                   <>
                     <Lock className="w-4 h-4" />
-                    <span>CONFIRM CASH ON DELIVERY ORDER</span>
+                    <span>
+                      {formData.paymentMethod === "sslcommerz"
+                        ? "PROCEED TO ONLINE PAYMENT"
+                        : "CONFIRM CASH ON DELIVERY ORDER"}
+                    </span>
                   </>
                 )}
               </button>
@@ -496,5 +1000,22 @@ export default function CheckoutPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-[#0a0a0b] min-h-screen py-24 text-center text-zinc-400 font-mono text-xs flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-[#ccff00] border-t-transparent rounded-full animate-spin" />
+            <span>INITIALIZING SECURE CHECKOUT...</span>
+          </div>
+        </div>
+      }
+    >
+      <CheckoutContent />
+    </Suspense>
   );
 }

@@ -1,0 +1,63 @@
+name: FLASHWEAR Release & Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "Target Deployment Environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+      run_migrations:
+        description: "Apply pending Supabase migrations"
+        required: true
+        default: true
+        type: boolean
+
+concurrency:
+  group: deployment-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Cloud
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        if: ${{ inputs.run_migrations != false }}
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Apply Database Migrations (Controlled)
+        if: ${{ inputs.run_migrations != false }}
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          if [ -n "$SUPABASE_DB_PASSWORD" ] && [ -n "$SUPABASE_PROJECT_ID" ]; then
+            echo "Applying versioned migrations to Supabase project..."
+            supabase db push --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.${SUPABASE_PROJECT_ID}.supabase.co:5432/postgres"
+          else
+            echo "Supabase deployment credentials not present in repository secrets. Skipping remote db push."
+          fi
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}

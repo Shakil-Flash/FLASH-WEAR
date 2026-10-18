@@ -3,13 +3,18 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Truck } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT } from "@/lib/utils/format-currency";
+
+const FREE_SHIPPING_THRESHOLD = 3000;
 
 export function CartDrawer() {
   const { items, removeItem, updateQuantity, isCartOpen, setIsCartOpen, subtotal, totalQuantity } =
     useCart();
+
+  const shippingProgress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
+  const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
   if (!isCartOpen) return null;
 
@@ -62,6 +67,26 @@ export function CartDrawer() {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Free Delivery Goal Bar */}
+              <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-sm space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="flex items-center gap-1.5 text-zinc-300">
+                    <Truck className="w-3.5 h-3.5 text-[#ccff00]" />
+                    {amountToFreeShipping === 0 ? (
+                      <span className="text-[#ccff00] font-bold">FREE Nationwide Delivery Unlocked!</span>
+                    ) : (
+                      <span>Add <strong className="text-white">{formatBDT(amountToFreeShipping)}</strong> for Free Delivery</span>
+                    )}
+                  </span>
+                  <span className="text-zinc-500">{shippingProgress}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#ccff00] transition-all duration-300"
+                    style={{ width: `${shippingProgress}%` }}
+                  />
+                </div>
+              </div>
               {items.map((item) => (
                 <div
                   key={item.variantId}

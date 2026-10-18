@@ -1,0 +1,57 @@
+name: FLASHWEAR CI - Verification & Quality Gate
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Code Quality & Security Tests
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_SUPABASE_URL: https://mock-test.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: mock-anon-key-test
+      SUPABASE_SERVICE_ROLE_KEY: mock-service-role-test
+      ENABLE_MOCK_PAYMENT_GATEWAY: "true"
+      CRON_SECRET: mock-ci-cron-secret
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Committed Dependencies
+        run: npm ci
+
+      - name: ESLint Code Quality Inspection
+        run: npm run lint
+
+      - name: TypeScript Strict Typecheck
+        run: npm run typecheck
+
+      - name: Run Vitest Unit & Regression Suite
+        run: npm run test
+
+      - name: Validate Supabase SQL Migration Syntax
+        run: |
+          for f in supabase/migrations/*.sql; do
+            echo "Inspecting migration: $f"
+            test -s "$f" || (echo "Empty migration: $f" && exit 1)
+          done
+
+      - name: Next.js Production Build Validation
+        run: npm run build

@@ -7,6 +7,8 @@ import { formatBDT } from "@/lib/utils/format-currency";
 import { useCart } from "@/lib/cart-context";
 import { SizeGuideModal } from "@/components/size-guide-modal";
 import { ProductCard } from "@/components/product-card";
+import { BackInStockModal } from "@/components/product/back-in-stock-modal";
+import { trackViewItem, trackAddToCart } from "@/lib/analytics/ga4";
 import {
   Check,
   ShoppingBag,
@@ -18,6 +20,8 @@ import {
   Minus,
   ZoomIn,
   X,
+  Bell,
+  TrendingDown,
 } from "lucide-react";
 
 interface ProductDetailClientProps {
@@ -48,6 +52,8 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
   const [errorMsg, setErrorMsg] = useState("");
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [stockModalOpen, setStockModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<"back_in_stock" | "price_drop">("back_in_stock");
 
   // Find exact active variant
   const currentVariant = useMemo(() => {
@@ -58,6 +64,19 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
 
   const stock = currentVariant ? currentVariant.inventory_quantity : 0;
   const isOutOfStock = stock <= 0;
+
+  React.useEffect(() => {
+    trackViewItem(
+      {
+        item_id: product.id,
+        item_name: product.name,
+        price: product.price,
+        item_category: product.category?.name,
+        item_variant: currentVariant?.sku,
+      },
+      product.price
+    );
+  }, [product, currentVariant]);
 
   const currentImage = images[selectedImageIndex]?.url || images[0]?.url || "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1200&q=85";
 
@@ -94,6 +113,18 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
       maxInventory: stock,
       imageUrl: currentImage,
     });
+
+    trackAddToCart(
+      {
+        item_id: product.id,
+        item_name: product.name,
+        price: product.price,
+        item_category: product.category?.name,
+        item_variant: currentVariant.sku,
+        quantity,
+      },
+      product.price * quantity
+    );
 
     setAddedSuccess(true);
     setTimeout(() => setAddedSuccess(false), 2500);
@@ -348,6 +379,32 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
                   </button>
                 </div>
 
+                {isOutOfStock && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalType("back_in_stock");
+                      setStockModalOpen(true);
+                    }}
+                    className="w-full py-3 bg-zinc-900 border border-[#ccff00]/40 text-[#ccff00] hover:bg-[#ccff00]/10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Bell className="w-4 h-4" />
+                    <span>Notify Me When Restocked</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalType("price_drop");
+                    setStockModalOpen(true);
+                  }}
+                  className="w-full py-1 text-zinc-400 hover:text-white text-[11px] font-mono uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <TrendingDown className="w-3.5 h-3.5 text-[#ccff00]" />
+                  <span>Set Price Drop Alert</span>
+                </button>
+
                 {errorMsg && (
                   <div className="flex items-center gap-2 p-3 bg-red-950/40 border border-red-900/60 text-xs font-mono text-red-400">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -437,6 +494,18 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
           </div>
         </div>
       )}
+
+      {/* Back In Stock & Price Drop Modal */}
+      <BackInStockModal
+        isOpen={stockModalOpen}
+        onClose={() => setStockModalOpen(false)}
+        productId={product.id}
+        productName={product.name}
+        variantId={currentVariant?.id}
+        variantLabel={currentVariant ? `${currentVariant.color} / ${currentVariant.size}` : undefined}
+        type={modalType}
+        currentPrice={product.price}
+      />
     </div>
   );
 }

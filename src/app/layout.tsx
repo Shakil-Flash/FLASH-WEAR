@@ -5,6 +5,7 @@ import { AnnouncementBar } from "@/components/announcement-bar";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CartDrawer } from "@/components/cart-drawer";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 
 export const metadata: Metadata = {
   title: {
@@ -47,6 +48,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="bg-[#0a0a0b] text-[#f4f4f5] min-h-screen flex flex-col font-sans">
         <CartProvider>
+          <GoogleAnalytics />
           <AnnouncementBar />
           <Navbar />
           <main className="flex-1">{children}</main>

@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin, isServiceRoleConfigured } from "@/lib/supabase/admin";
 import { INITIAL_COLLECTIONS } from "@/lib/data/mock-catalog";
 import { Collection } from "@/lib/types";
+import { requireAdmin } from "@/lib/auth/server";
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireAdmin(request);
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error || "Forbidden" }, { status: auth.status });
+    }
+
     const { name, slug, description, imageUrl } = await request.json();
 
     if (!name || !slug) {

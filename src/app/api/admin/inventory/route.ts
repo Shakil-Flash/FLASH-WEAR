@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, isServiceRoleConfigured } from "@/lib/supabase/admin";
 import { INITIAL_PRODUCTS } from "@/lib/data/mock-catalog";
+import { requireAdmin } from "@/lib/auth/server";
 
 export async function PATCH(request: Request) {
   try {
+    const auth = await requireAdmin(request);
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error || "Forbidden" }, { status: auth.status });
+    }
+
     const { variantId, quantity } = await request.json();
 
     if (!variantId || quantity === undefined || quantity < 0) {

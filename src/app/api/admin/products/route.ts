@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin, isServiceRoleConfigured } from "@/lib/supabase/admin";
 import { INITIAL_PRODUCTS } from "@/lib/data/mock-catalog";
 import { Product } from "@/lib/types";
+import { requireAdmin } from "@/lib/auth/server";
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireAdmin(request);
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error || "Forbidden" }, { status: auth.status });
+    }
+
     const body = await request.json();
     const {
       name,
@@ -120,6 +126,11 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const auth = await requireAdmin(request);
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error || "Forbidden" }, { status: auth.status });
+    }
+
     const body = await request.json();
     const { id, name, price, compareAtPrice, isPublished, isFeatured, isBestseller, description, details } = body;
 

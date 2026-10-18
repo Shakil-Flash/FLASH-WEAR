@@ -15,6 +15,9 @@ import {
   Phone,
   Mail,
   FileText,
+  ExternalLink,
+  CreditCard,
+  Tag,
 } from "lucide-react";
 
 interface OrderDetailManagerProps {
@@ -27,7 +30,9 @@ export function OrderDetailManager({ order: initialOrder }: OrderDetailManagerPr
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [trackingNumber, setTrackingNumber] = useState(order.tracking_number || "");
   const [adminNotes, setAdminNotes] = useState(order.admin_notes || "");
+  const [selectedCourier, setSelectedCourier] = useState(order.courier_name || "Pathao Courier");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isShipping, setIsShipping] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   const handleUpdate = async () => {
@@ -66,6 +71,47 @@ export function OrderDetailManager({ order: initialOrder }: OrderDetailManagerPr
     }
   };
 
+  const handleBookShipment = async () => {
+    setIsShipping(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/ship`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courierName: selectedCourier }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Shipment booking failed");
+      }
+
+      const shipment = data.shipment;
+      setMessage({
+        text: `Shipment booked with ${shipment.courierName}. Consignment: ${shipment.consignmentId}`,
+        type: "success",
+      });
+
+      setOrder((prev) => ({
+        ...prev,
+        courier_name: shipment.courierName,
+        courier_consignment_id: shipment.consignmentId,
+        courier_tracking_url: shipment.trackingUrl,
+        shipment_status: shipment.status,
+        tracking_number: shipment.consignmentId,
+        status: "shipped",
+      }));
+      setStatus("shipped");
+      setTrackingNumber(shipment.consignmentId);
+      router.refresh();
+    } catch (err: any) {
+      setMessage({ text: err.message, type: "error" });
+    } finally {
+      setIsShipping(false);
+    }
+  };
+
   const handleCancelOrder = async () => {
     if (
       !confirm(
@@ -96,7 +142,7 @@ export function OrderDetailManager({ order: initialOrder }: OrderDetailManagerPr
 
       setMessage({ text: "Order cancelled and variant inventory restored.", type: "success" });
       setStatus("cancelled");
-      setOrder((prev) => ({ ...prev, status: "cancelled" }));
+      setOrder((prev) => ({ ...prev, status: "cancelled", payment_status: "cancelled" }));
       router.refresh();
     } catch (err: any) {
       setMessage({ text: err.message, type: "error" });
@@ -123,6 +169,32 @@ export function OrderDetailManager({ order: initialOrder }: OrderDetailManagerPr
           <span>{message.text}</span>
         </div>
       )}
+
+      {/* Payment & Status Banner */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-[#111113] border border-zinc-800 p-4 text-xs font-mono">
+        <div>
+          <span className="text-zinc-500 block">Payment Method</span>
+          <strong className="text-white uppercase">{order.payment_method === "sslcommerz" ? "Online (SSLCOMMERZ)" : "Cash On Delivery"}</strong>
+        </div>
+        <div>
+          <span className="text-zinc-500 block">Payment Status</span>
+          <span className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase ${
+            order.payment_status === "paid"
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+              : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+          }`}>
+            {order.payment_status}
+          </span>
+        </div>
+        <div>
+          <span className="text-zinc-500 block">Fulfillment Status</span>
+          <span className="text-white font-bold uppercase">{order.status}</span>
+        </div>
+        <div>
+          <span className="text-zinc-500 block">Shipment Status</span>
+          <span className="text-[#ccff00] font-bold uppercase">{(order.shipment_status || "not_shipped").replace(/_/g, " ")}</span>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Items & Customer Details */}
@@ -172,12 +244,18 @@ export function OrderDetailManager({ order: initialOrder }: OrderDetailManagerPr
                 <span>Subtotal</span>
                 <span className="text-white">{formatBDT(order.subtotal)}</span>
               </div>
+              {order.discount_amount > 0 && (
+                <div className="flex justify-between text-emerald-400 font-bold">
+                  <span>Discount ({order.coupon_code || "COUPON"})</span>
+                  <span>-{formatBDT(order.discount_amount)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-zinc-400">
                 <span>Delivery Fee ({order.division})</span>
                 <span className="text-white">{formatBDT(order.delivery_fee)}</span>
               </div>
               <div className="flex justify-between text-white font-bold text-sm pt-2 border-t border-zinc-800">
-                <span>Total Payable (COD)</span>
+                <span>Total Amount</span>
                 <span className="text-[#ccff00] text-base">{formatBDT(order.total_amount)}</span>
               </div>
             </div>
@@ -195,7 +273,7 @@ export function OrderDetailManager({ order: initialOrder }: OrderDetailManagerPr
                 <strong className="text-white text-sm">{order.customer_name}</strong>
               </div>
               <div className="p-3 bg-zinc-900 border border-zinc-800">
-                <span className="text-zinc-500 block">Phone (COD Courier Contact)</span>
+                <span className="text-zinc-500 block">Phone (Courier Contact)</span>
                 <strong className="text-white text-sm">{order.customer_phone}</strong>
               </div>
               <div className="p-3 bg-zinc-900 border border-zinc-800">
@@ -224,9 +302,70 @@ export function OrderDetailManager({ order: initialOrder }: OrderDetailManagerPr
 
         {/* Right Column: Order Actions & Status Manager */}
         <div className="lg:col-span-4 space-y-6">
+          {/* Automated Courier Dispatch Box */}
+          <div className="p-6 bg-[#111113] border border-zinc-800 space-y-4">
+            <h3 className="text-xs font-mono uppercase tracking-wider font-bold text-white border-b border-zinc-800 pb-2 flex items-center gap-2">
+              <Truck className="w-4 h-4 text-[#ccff00]" />
+              <span>Courier Dispatch Layer</span>
+            </h3>
+
+            {order.courier_consignment_id ? (
+              <div className="space-y-3 text-xs font-mono">
+                <div className="p-3 bg-zinc-900 border border-zinc-800">
+                  <span className="text-zinc-500 block">Active Carrier</span>
+                  <strong className="text-white">{order.courier_name}</strong>
+                </div>
+                <div className="p-3 bg-zinc-900 border border-zinc-800">
+                  <span className="text-zinc-500 block">Consignment ID</span>
+                  <strong className="text-[#ccff00] text-sm">{order.courier_consignment_id}</strong>
+                </div>
+                {order.courier_tracking_url && (
+                  <a
+                    href={order.courier_tracking_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <span>Open Live Courier Tracking</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <label className="block text-xs uppercase font-mono text-zinc-400">
+                  Select Courier Partner
+                </label>
+                <select
+                  value={selectedCourier}
+                  onChange={(e) => setSelectedCourier(e.target.value)}
+                  className="w-full bg-[#18181b] border border-zinc-700 px-3 py-2 text-xs text-white"
+                >
+                  <option value="Pathao Courier">Pathao Courier (Official API)</option>
+                  <option value="Steadfast Courier">Steadfast Courier</option>
+                  <option value="RedX Logistics">RedX Logistics</option>
+                  <option value="Sundarban Courier">Sundarban Courier</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={handleBookShipment}
+                  disabled={isShipping || order.status === "cancelled"}
+                  className="w-full py-2.5 bg-[#ccff00] hover:bg-[#b8e600] disabled:opacity-40 text-black font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Truck className="w-4 h-4" />
+                  <span>{isShipping ? "Dispatching..." : `Book with ${selectedCourier}`}</span>
+                </button>
+                <p className="text-[10px] text-zinc-500 font-mono">
+                  Automatically generates tracking code and prevents duplicate bookings.
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="p-6 bg-[#111113] border border-zinc-800 space-y-5">
             <h3 className="text-xs font-mono uppercase tracking-wider font-bold text-white border-b border-zinc-800 pb-2">
-              Status & Dispatch Pipeline
+              Status &amp; Notes
             </h3>
 
             {/* Status Selector */}
@@ -252,7 +391,7 @@ export function OrderDetailManager({ order: initialOrder }: OrderDetailManagerPr
             {/* Courier Tracking Number */}
             <div className="space-y-1.5">
               <label className="block text-xs uppercase font-mono text-zinc-400">
-                Courier Consignment / Tracking #
+                Manual Tracking / Consignment #
               </label>
               <input
                 type="text"

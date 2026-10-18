@@ -9,6 +9,7 @@ interface CartContextType {
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
+  replaceCart: (items: CartItem[]) => void;
   totalQuantity: number;
   subtotal: number;
   isCartOpen: boolean;
@@ -90,6 +91,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([]);
   };
 
+  const replaceCart = (newItems: CartItem[]) => {
+    setItems(newItems);
+  };
+
   const totalQuantity = items.reduce((acc, item) => acc + item.quantity, 0);
   const subtotal = items.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
 
@@ -101,6 +106,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         removeItem,
         updateQuantity,
         clearCart,
+        replaceCart,
         totalQuantity,
         subtotal,
         isCartOpen,

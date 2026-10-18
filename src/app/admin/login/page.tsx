@@ -19,34 +19,15 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      // 1. If Supabase is connected, authenticate via Supabase Auth
-      if (isSupabaseConfigured()) {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-        if (authError) {
-          throw new Error(authError.message);
-        }
-
-        // Verify role
-        const { data: roleData, error: roleError } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user?.id)
-          .eq("role", "admin")
-          .single();
-
-        if (roleError || !roleData) {
-          await supabase.auth.signOut();
-          throw new Error("Access denied. Your account does not have authorized admin privileges.");
-        }
-      } else {
-        // Local preview fallback passkey for Phase 1 verification
-        if (password !== "flashwear2026" && password !== "admin123") {
-          throw new Error("Invalid admin passphrase. (Default local preview pass: flashwear2026)");
-        }
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Authentication failed. Please verify credentials.");
       }
 
       localStorage.setItem("flashwear_admin_auth", "true");
