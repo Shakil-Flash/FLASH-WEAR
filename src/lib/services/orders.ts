@@ -85,6 +85,14 @@ export async function createGuestOrder(input: CheckoutInput): Promise<CreateOrde
     items,
   } = validated.data;
 
+  // In production, persistent database is strictly mandatory
+  if (process.env.NODE_ENV === "production" && !isServiceRoleConfigured()) {
+    return {
+      success: false,
+      error: "Production database service is not configured. Orders cannot be created in memory.",
+    };
+  }
+
   // 2. Fetch official product & variant data to calculate true prices and verify inventory
   if (isServiceRoleConfigured()) {
     try {
@@ -308,11 +316,23 @@ export async function createGuestOrder(input: CheckoutInput): Promise<CreateOrde
         };
       }
     } catch (err: any) {
+      if (process.env.NODE_ENV === "production") {
+        return {
+          success: false,
+          error: `Production database order creation failed: ${err.message}`,
+        };
+      }
       console.warn("Supabase order error, using fallback pipeline:", err.message);
     }
   }
 
-  // 3. Fallback Pipeline (In-memory atomic validation and stock reservation)
+  // 3. Fallback Pipeline (Development & isolated testing only)
+  if (process.env.NODE_ENV === "production") {
+    return {
+      success: false,
+      error: "Persistent database service is unavailable in production.",
+    };
+  }
   if (idempotencyKey) {
     const existing = fallbackOrders.find((o) => (o as any).idempotencyKey === idempotencyKey);
     if (existing) {
@@ -693,6 +713,26 @@ export async function markOrderPaid(
 
       if (error) return { success: false, error: error.message };
 
+      // Persist transaction record in payment_transactions table for financial auditing
+      try {
+        await supabaseAdmin.from("payment_transactions").upsert(
+          {
+            order_id: orderId,
+            tran_id: details.tranId,
+            val_id: details.valId,
+            amount: details.amount,
+            card_type: details.cardType || "Online Gateway",
+            status: "VALID",
+            currency: "BDT",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "tran_id" }
+        );
+      } catch (txErr) {
+        console.warn("Payment transaction audit record warning:", txErr);
+      }
+
       if (existingOrder?.customer_email) {
         sendPaymentSuccessEmail({
           orderNumber: existingOrder.order_number,
@@ -703,9 +743,19 @@ export async function markOrderPaid(
           paymentChannel: details.cardType || "Online Gateway",
         }).catch((err) => console.warn("Payment confirmation email warning:", err));
       }
+
+      return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message };
     }
+  }
+
+  // Reject silent in-memory fallback in production
+  if (process.env.NODE_ENV === "production") {
+    return {
+      success: false,
+      error: "Production database is not configured. Payment confirmation aborted.",
+    };
   }
 
   const order = fallbackOrders.find((o) => o.id === orderId);
@@ -899,6 +949,13 @@ export async function updateAdminOrderStatus(
     }
   }
 
+  if (process.env.NODE_ENV === "production") {
+    return {
+      success: false,
+      error: "Production database is not configured. Order update rejected.",
+    };
+  }
+
   const order = fallbackOrders.find((o) => o.id === orderId);
   if (!order) return { success: false, error: "Order not found" };
 
@@ -961,6 +1018,13 @@ export async function updateOrderShipment(
     }
   }
 
+  if (process.env.NODE_ENV === "production") {
+    return {
+      success: false,
+      error: "Production database is not configured. Shipment update rejected.",
+    };
+  }
+
   const order = fallbackOrders.find((o) => o.id === orderId);
   if (order) {
     order.courier_name = data.courierName;
@@ -1008,6 +1072,13 @@ export async function cancelOrderAndRestoreStock(
     } catch (err: any) {
       return { success: false, error: err.message };
     }
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return {
+      success: false,
+      error: "Production database is not configured. Order cancellation rejected.",
+    };
   }
 
   const order = fallbackOrders.find((o) => o.id === orderId);

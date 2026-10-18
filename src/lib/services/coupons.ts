@@ -115,7 +115,7 @@ export async function validateCoupon(
     }
   }
 
-  if (!coupon) {
+  if (!coupon && process.env.NODE_ENV !== "production") {
     coupon = INITIAL_COUPONS.find((c) => c.code === normalizedCode);
   }
 
@@ -224,7 +224,20 @@ export async function recordCouponRedemption(
 ) {
   if (isServiceRoleConfigured()) {
     try {
-      // Increment used count
+      // 1. Try atomic database transaction RPC with row lock
+      const { data: rpcSuccess, error: rpcError } = await supabaseAdmin.rpc("redeem_coupon_atomic", {
+        p_coupon_id: couponId,
+        p_order_id: orderId,
+        p_discount_amount: discountAmount,
+        p_customer_email: customerEmail?.toLowerCase() || null,
+        p_user_id: userId || null,
+      });
+
+      if (!rpcError && rpcSuccess) {
+        return;
+      }
+
+      // Fallback direct update & insert if RPC is not yet applied
       const { data: cpn } = await supabaseAdmin
         .from("coupons")
         .select("used_count")
@@ -249,6 +262,12 @@ export async function recordCouponRedemption(
     } catch (err) {
       console.error("Error recording coupon redemption in DB:", err);
     }
+  }
+
+  // Reject silent in-memory fallback in production
+  if (process.env.NODE_ENV === "production") {
+    console.error("Production database not configured for coupon redemption.");
+    return;
   }
 
   // In-memory update
@@ -281,6 +300,11 @@ export async function getAllCoupons(): Promise<Coupon[]> {
       // Fallback
     }
   }
+
+  if (process.env.NODE_ENV === "production") {
+    return [];
+  }
+
   return [...INITIAL_COUPONS];
 }
 
@@ -322,6 +346,10 @@ export async function createCoupon(input: Omit<Coupon, "id" | "used_count" | "cr
     }
   }
 
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Production database is not configured. Coupon creation rejected.");
+  }
+
   INITIAL_COUPONS.unshift(newCoupon);
   return newCoupon;
 }
@@ -337,6 +365,10 @@ export async function toggleCouponActive(couponId: string, isActive: boolean): P
     } catch {
       // Fallback
     }
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return false;
   }
 
   const cpn = INITIAL_COUPONS.find((c) => c.id === couponId);

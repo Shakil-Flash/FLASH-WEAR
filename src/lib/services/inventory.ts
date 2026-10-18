@@ -62,6 +62,32 @@ export async function adjustVariantStock(
 
   if (isServiceRoleConfigured()) {
     try {
+      // 1. Try atomic RPC procedure if migration is applied
+      const { data: rpcAudit, error: rpcError } = await supabaseAdmin.rpc("adjust_stock_atomic", {
+        p_variant_id: variantId,
+        p_new_quantity: quantity,
+        p_reason: reason,
+        p_adjusted_by: adminUser,
+      });
+
+      if (!rpcError && rpcAudit) {
+        const audit = rpcAudit as any;
+        const auditEntry: StockAdjustmentAudit = {
+          id: audit.id || `adj-${Date.now()}`,
+          variantId: audit.variant_id || variantId,
+          sku: audit.sku || variantId,
+          productName: audit.product_name || "Streetwear Item",
+          previousQuantity: audit.previous_quantity,
+          newQuantity: audit.new_quantity,
+          difference: audit.difference,
+          reason: audit.reason,
+          adjustedBy: audit.adjusted_by,
+          createdAt: audit.created_at || new Date().toISOString(),
+        };
+        return { success: true, audit: auditEntry };
+      }
+
+      // Fallback direct update & audit log
       const { data: existingVariant } = await supabaseAdmin
         .from("product_variants")
         .select("id, sku, inventory_quantity, product:products(name)")
@@ -83,10 +109,32 @@ export async function adjustVariantStock(
         .eq("id", variantId);
 
       if (error) return { success: false, error: error.message };
+
+      try {
+        await supabaseAdmin.from("stock_adjustment_audits").insert({
+          variant_id: variantId,
+          sku: sku || variantId,
+          product_name: productName || "Streetwear Item",
+          previous_quantity: previousQuantity,
+          new_quantity: quantity,
+          difference: quantity - previousQuantity,
+          reason,
+          adjusted_by: adminUser,
+        });
+      } catch (auditErr) {
+        console.warn("Stock adjustment audit insert warning:", auditErr);
+      }
     } catch (err: any) {
       return { success: false, error: err.message };
     }
   } else {
+    if (process.env.NODE_ENV === "production") {
+      return {
+        success: false,
+        error: "Production database is not configured. Inventory adjustment rejected.",
+      };
+    }
+
     let found = false;
     for (const p of INITIAL_PRODUCTS) {
       const v = p.variants?.find((x) => x.id === variantId);

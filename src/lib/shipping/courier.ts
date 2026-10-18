@@ -151,7 +151,16 @@ export class PathaoCourierAdapter implements ICourierProvider {
       }
     }
 
-    // Mock Sandbox fallback when Pathao credentials are not provided
+    // Mock Sandbox fallback when Pathao credentials are not provided (development / testing only)
+    if (process.env.NODE_ENV === "production") {
+      return {
+        success: false,
+        courierName: this.name,
+        status: "not_shipped",
+        error: "Pathao Courier credentials are not configured in production environment.",
+      };
+    }
+
     const mockConsignmentId = `PTH-${Date.now().toString(36).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
     return {
       success: true,
@@ -253,7 +262,46 @@ export async function bookOrderShipment(
   courierName: string,
   request: ShipmentRequest
 ): Promise<ShipmentResult> {
-  // 1. Duplicate check: prevent creating multiple active shipments for the same order
+  // 1. Authoritative Database Duplicate Check: Check persistent shipments table
+  if (isServiceRoleConfigured()) {
+    try {
+      const { data: dbShipment } = await supabaseAdmin
+        .from("shipments")
+        .select("*")
+        .eq("order_id", orderId)
+        .neq("status", "cancelled")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (dbShipment && dbShipment.consignment_id) {
+        return {
+          success: true,
+          courierName: dbShipment.courier_name,
+          consignmentId: dbShipment.consignment_id,
+          trackingNumber: dbShipment.tracking_number || dbShipment.consignment_id,
+          trackingUrl: dbShipment.tracking_url || undefined,
+          status: dbShipment.status as ShipmentStatus,
+          deliveryFee: Number(dbShipment.delivery_fee) || request.deliveryFee,
+          rawResponse: { isDuplicate: true },
+        };
+      }
+    } catch (err) {
+      console.warn("DB shipment duplicate check warning:", err);
+    }
+  }
+
+  // Reject unpersisted shipment dispatch in production
+  if (process.env.NODE_ENV === "production" && !isServiceRoleConfigured()) {
+    return {
+      success: false,
+      courierName,
+      status: "not_shipped",
+      error: "Production database is not configured. Shipment dispatch aborted.",
+    };
+  }
+
+  // Fallback in-memory duplicate check (development / testing only)
   const existingShipment = fallbackShipments.find(
     (s) => s.order_id === orderId && s.status !== "cancelled"
   );

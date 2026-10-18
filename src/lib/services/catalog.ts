@@ -10,13 +10,18 @@ export async function getCategories(): Promise<Category[]> {
         .select("*")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         return data as Category[];
       }
     } catch {
       // Fallback
     }
   }
+
+  if (process.env.NODE_ENV === "production") {
+    return [];
+  }
+
   return INITIAL_CATEGORIES;
 }
 
@@ -28,13 +33,18 @@ export async function getCollections(): Promise<Collection[]> {
         .select("*")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         return data as Collection[];
       }
     } catch {
       // Fallback
     }
   }
+
+  if (process.env.NODE_ENV === "production") {
+    return [];
+  }
+
   return INITIAL_COLLECTIONS;
 }
 
@@ -113,7 +123,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
       }
 
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         let results = data as Product[];
         if (filters.categorySlug) {
           results = results.filter((p) => p.category?.slug === filters.categorySlug);
@@ -132,6 +142,10 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
     } catch {
       // Fallback
     }
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return [];
   }
 
   // Filter against mock catalog
@@ -220,6 +234,13 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     } catch {
       // Fallback
     }
+
+    // In database-configured environments, if product does not exist in DB, do not fabricate from mock
+    return null;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return null;
   }
 
   const found = INITIAL_PRODUCTS.find((p) => p.slug === slug);
@@ -251,6 +272,13 @@ export async function getProductById(id: string): Promise<Product | null> {
         return data as Product;
       }
     } catch {}
+
+    // In database-configured environments, if product does not exist in DB, do not fabricate from mock
+    return null;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return null;
   }
 
   const found = INITIAL_PRODUCTS.find((p) => p.id === id);

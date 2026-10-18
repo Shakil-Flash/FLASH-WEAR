@@ -44,7 +44,9 @@ export async function GET(request: Request) {
     }
   }
 
-  const overallStatus = hasDatabaseError && process.env.NODE_ENV === "production" ? "degraded" : "healthy";
+  const isProduction = process.env.NODE_ENV === "production";
+  const isDatabaseUnready = hasDatabaseError || (isProduction && !isSupabaseConfigured());
+  const overallStatus = isDatabaseUnready ? "degraded" : "healthy";
   const statusCode = overallStatus === "healthy" ? 200 : 503;
 
   // Check if caller has administrative authorization for deep diagnostics
