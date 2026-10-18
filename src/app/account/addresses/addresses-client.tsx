@@ -91,7 +91,7 @@ export function AddressesClient({ initialAddresses }: Props) {
                 placeholder="e.g. Home, Office, Studio"
                 value={formData.label}
                 onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938]"
+                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15"
               />
             </div>
             <div>
@@ -102,7 +102,7 @@ export function AddressesClient({ initialAddresses }: Props) {
                 placeholder="Full Name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938]"
+                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15"
               />
             </div>
             <div>
@@ -113,7 +113,7 @@ export function AddressesClient({ initialAddresses }: Props) {
                 placeholder="01712345678"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938]"
+                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15"
               />
             </div>
             <div>
@@ -121,7 +121,7 @@ export function AddressesClient({ initialAddresses }: Props) {
               <select
                 value={formData.division}
                 onChange={(e) => setFormData({ ...formData, division: e.target.value })}
-                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938]"
+                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15"
               >
                 <option value="Dhaka">Dhaka</option>
                 <option value="Chattogram">Chattogram</option>
@@ -141,7 +141,7 @@ export function AddressesClient({ initialAddresses }: Props) {
                 placeholder="District (e.g. Dhaka, Gazipur, Narayanganj)"
                 value={formData.district}
                 onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938]"
+                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15"
               />
             </div>
             <div className="sm:col-span-2">
@@ -152,7 +152,7 @@ export function AddressesClient({ initialAddresses }: Props) {
                 placeholder="House, Road, Area details"
                 value={formData.address_line}
                 onChange={(e) => setFormData({ ...formData, address_line: e.target.value })}
-                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938]"
+                className="w-full bg-white border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15"
               />
             </div>
           </div>

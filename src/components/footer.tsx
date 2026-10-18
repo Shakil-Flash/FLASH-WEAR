@@ -49,7 +49,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/collections/drop-01-cyber-circuit" className="hover:text-[#181818] transition-colors">
+                <Link href="/collections/monochrome-core" className="hover:text-[#181818] transition-colors">
                   Capsule Collections
                 </Link>
               </li>

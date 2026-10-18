@@ -74,14 +74,14 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         </div>
 
         {/* Filter Bar & Sorting */}
-        <div className="py-6 border-b border-[#E7E3DC] flex flex-wrap items-center justify-between gap-4">
-          {/* Category Tabs */}
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="py-5 sm:py-6 border-b border-[#E7E3DC] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Category Tabs with smooth mobile horizontal scroll */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap -mx-4 px-4 sm:mx-0 sm:px-0">
             <Link
               href="/shop"
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md whitespace-nowrap transition-colors ${
                 !searchParams.category && !searchParams.collection
-                  ? "bg-[#181818] text-white"
+                  ? "bg-[#181818] text-white shadow-xs"
                   : "bg-white text-[#74716D] hover:text-[#181818] border border-[#E7E3DC]"
               }`}
             >
@@ -91,9 +91,9 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
               <Link
                 key={cat.id}
                 href={`/shop?category=${cat.slug}`}
-                className={`px-3.5 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-md whitespace-nowrap transition-colors ${
                   searchParams.category === cat.slug
-                    ? "bg-[#181818] text-white"
+                    ? "bg-[#181818] text-white shadow-xs"
                     : "bg-white text-[#74716D] hover:text-[#181818] border border-[#E7E3DC]"
                 }`}
               >
@@ -103,17 +103,17 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           </div>
 
           {/* Sort Selector */}
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-xs text-[#74716D]">Sort by:</span>
-            <div className="flex gap-1.5">
+          <div className="flex items-center justify-between sm:justify-start gap-2 pt-2 sm:pt-0 border-t border-[#E7E3DC]/60 sm:border-t-0 sm:ml-auto">
+            <span className="text-xs text-[#74716D] font-medium shrink-0">Sort:</span>
+            <div className="flex gap-1.5 overflow-x-auto">
               <Link
                 href={{
                   pathname: "/shop",
                   query: { ...searchParams, sort: "newest" },
                 }}
-                className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                className={`px-2.5 py-1 text-xs rounded transition-colors whitespace-nowrap ${
                   !searchParams.sort || searchParams.sort === "newest"
-                    ? "bg-[#181818] text-white font-medium"
+                    ? "bg-[#181818] text-white font-semibold"
                     : "text-[#74716D] hover:text-[#181818]"
                 }`}
               >
@@ -124,9 +124,9 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
                   pathname: "/shop",
                   query: { ...searchParams, sort: "price_asc" },
                 }}
-                className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                className={`px-2.5 py-1 text-xs rounded transition-colors whitespace-nowrap ${
                   searchParams.sort === "price_asc"
-                    ? "bg-[#181818] text-white font-medium"
+                    ? "bg-[#181818] text-white font-semibold"
                     : "text-[#74716D] hover:text-[#181818]"
                 }`}
               >
@@ -137,9 +137,9 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
                   pathname: "/shop",
                   query: { ...searchParams, sort: "price_desc" },
                 }}
-                className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                className={`px-2.5 py-1 text-xs rounded transition-colors whitespace-nowrap ${
                   searchParams.sort === "price_desc"
-                    ? "bg-[#181818] text-white font-medium"
+                    ? "bg-[#181818] text-white font-semibold"
                     : "text-[#74716D] hover:text-[#181818]"
                 }`}
               >
@@ -168,7 +168,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

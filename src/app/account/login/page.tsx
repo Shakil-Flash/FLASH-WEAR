@@ -61,7 +61,7 @@ export default function CustomerLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="customer@example.com"
-                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
               />
             </div>
           </div>
@@ -87,7 +87,7 @@ export default function CustomerLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
               />
             </div>
           </div>

@@ -131,7 +131,7 @@ export function OrderDetailClient({ order }: Props) {
                 );
               })}
               {/* Connecting Line */}
-              <div className="absolute top-4 left-1/8 right-1/8 h-0.5 bg-[#E7E3DC] -z-0" />
+              <div className="absolute top-4 left-[12.5%] right-[12.5%] h-0.5 bg-[#E7E3DC] -z-0" />
             </div>
           </div>
         ) : (

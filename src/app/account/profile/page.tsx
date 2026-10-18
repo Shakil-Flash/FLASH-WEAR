@@ -73,7 +73,7 @@ export default function ProfilePage() {
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                      className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -105,7 +105,7 @@ export default function ProfilePage() {
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                      className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
                     />
                   </div>
                 </div>

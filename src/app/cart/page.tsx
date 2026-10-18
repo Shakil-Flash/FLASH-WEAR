@@ -178,74 +178,82 @@ function CartContent() {
             {items.map((item) => (
               <div
                 key={item.variantId}
-                className="p-4 sm:p-5 bg-white border border-[#E7E3DC] rounded-xl shadow-sm flex flex-col sm:grid sm:grid-cols-12 sm:items-center gap-4 transition-all hover:border-[#D1CCC2]"
+                className="p-4 sm:p-5 bg-white border border-[#E7E3DC] rounded-xl shadow-sm transition-all hover:border-[#D1CCC2]"
               >
-                {/* Product Info */}
-                <div className="col-span-6 flex items-center gap-4">
-                  <div className="w-20 h-24 bg-[#F7F5F0] rounded-md border border-[#E7E3DC] flex-shrink-0 overflow-hidden">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.productName}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <Link
-                      href={`/product/${item.productSlug}`}
-                      className="text-sm font-semibold text-[#181818] hover:text-[#FF5938] transition-colors line-clamp-1"
-                    >
-                      {item.productName}
-                    </Link>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-[#74716D]">
-                      <span>Size: <strong className="text-[#181818] font-medium">{item.size}</strong></span>
-                      <span>•</span>
-                      <span>Color: <strong className="text-[#181818] font-medium">{item.color}</strong></span>
+                <div className="sm:grid sm:grid-cols-12 sm:items-center gap-4">
+                  {/* Product Info */}
+                  <div className="col-span-6 flex items-start sm:items-center gap-3.5 sm:gap-4">
+                    <div className="w-20 h-24 sm:w-20 sm:h-24 bg-[#F7F5F0] rounded-lg border border-[#E7E3DC] flex-shrink-0 overflow-hidden">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.productName}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <p className="text-[11px] text-[#74716D] mt-0.5">SKU: {item.sku}</p>
-                    <button
-                      onClick={() => removeItem(item.variantId)}
-                      className="mt-2 text-xs text-[#74716D] hover:text-red-600 flex items-center gap-1 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Remove</span>
-                    </button>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/product/${item.productSlug}`}
+                        className="text-sm font-semibold text-[#181818] hover:text-[#FF5938] transition-colors line-clamp-1"
+                      >
+                        {item.productName}
+                      </Link>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-[#74716D]">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#F7F5F0] border border-[#E7E3DC] text-[#181818] font-medium text-[11px]">
+                          {item.size}
+                        </span>
+                        <span>•</span>
+                        <span>{item.color}</span>
+                      </div>
+                      <p className="text-[11px] text-[#74716D] mt-1 font-mono">SKU: {item.sku}</p>
+                      <button
+                        onClick={() => removeItem(item.variantId)}
+                        className="mt-2 text-xs text-[#74716D] hover:text-red-600 flex items-center gap-1 transition-colors group"
+                        aria-label={`Remove ${item.productName}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-[#74716D] group-hover:text-red-600" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Unit Price */}
-                <div className="col-span-2 sm:text-center text-sm font-medium text-[#181818]">
-                  <span className="sm:hidden text-xs text-[#74716D] font-normal mr-1">Unit:</span>
-                  {formatBDT(item.unitPrice)}
-                </div>
+                  {/* Mobile Row for Price & Quantity / Desktop columns */}
+                  <div className="mt-4 pt-3 border-t border-[#F2EFEB] sm:mt-0 sm:pt-0 sm:border-0 sm:col-span-6 grid grid-cols-3 sm:grid-cols-6 items-center gap-2">
+                    {/* Unit Price */}
+                    <div className="sm:col-span-2 text-left sm:text-center text-xs sm:text-sm font-medium text-[#181818]">
+                      <span className="block text-[10px] sm:hidden text-[#74716D] uppercase">Unit</span>
+                      {formatBDT(item.unitPrice)}
+                    </div>
 
-                {/* Quantity Controls */}
-                <div className="col-span-2 flex sm:justify-center items-center gap-2">
-                  <div className="flex items-center border border-[#E7E3DC] rounded-lg bg-white overflow-hidden">
-                    <button
-                      onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                      className="p-1.5 text-[#74716D] hover:text-[#181818] hover:bg-[#F7F5F0] transition-colors"
-                      aria-label="Decrease quantity"
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="px-3 text-xs font-semibold text-[#181818]">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                      disabled={item.quantity >= item.maxInventory}
-                      className="p-1.5 text-[#74716D] hover:text-[#181818] hover:bg-[#F7F5F0] disabled:opacity-30 transition-colors"
-                      aria-label="Increase quantity"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Quantity Controls */}
+                    <div className="sm:col-span-2 flex justify-center items-center">
+                      <div className="flex items-center border border-[#E7E3DC] rounded-lg bg-[#F7F5F0] overflow-hidden">
+                        <button
+                          onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
+                          className="w-8 h-8 flex items-center justify-center text-[#74716D] hover:text-[#181818] hover:bg-white transition-colors"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="w-8 text-center text-xs font-semibold text-[#181818]">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                          disabled={item.quantity >= item.maxInventory}
+                          className="w-8 h-8 flex items-center justify-center text-[#74716D] hover:text-[#181818] hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Line Total */}
+                    <div className="sm:col-span-2 text-right text-xs sm:text-sm font-bold text-[#181818]">
+                      <span className="block text-[10px] sm:hidden text-[#74716D] uppercase">Total</span>
+                      {formatBDT(item.unitPrice * item.quantity)}
+                    </div>
                   </div>
-                </div>
-
-                {/* Line Total */}
-                <div className="col-span-2 sm:text-right text-sm font-bold text-[#181818]">
-                  <span className="sm:hidden text-xs text-[#74716D] font-normal mr-1">Total:</span>
-                  {formatBDT(item.unitPrice * item.quantity)}
                 </div>
               </div>
             ))}

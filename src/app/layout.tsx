@@ -1,10 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CartDrawer } from "@/components/cart-drawer";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+
+export const viewport: Viewport = {
+  themeColor: "#F7F5F0",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   title: {

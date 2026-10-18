@@ -65,7 +65,7 @@ export default function CustomerRegisterPage() {
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 placeholder="Tanzim Shakil"
-                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
               />
             </div>
           </div>
@@ -82,7 +82,7 @@ export default function CustomerRegisterPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="customer@example.com"
-                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
               />
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function CustomerRegisterPage() {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="01712345678"
-                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
               />
             </div>
           </div>
@@ -117,7 +117,7 @@ export default function CustomerRegisterPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••"
-                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-10 pr-4 py-2.5 text-xs text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
               />
             </div>
           </div>

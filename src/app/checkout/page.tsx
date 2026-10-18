@@ -486,7 +486,7 @@ function CheckoutContent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-[#74716D]">
+                  <label className="block text-xs font-semibold text-[#181818]">
                     Full Name <span className="text-[#FF5938]">*</span>
                   </label>
                   <input
@@ -495,17 +495,20 @@ function CheckoutContent() {
                     value={formData.customerName}
                     onChange={handleChange}
                     placeholder="e.g. Tanzim Shakil"
-                    className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all ${
+                    className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all ${
                       errors.customerName ? "border-red-500 bg-red-50/20" : "border-[#E7E3DC]"
                     }`}
                   />
                   {errors.customerName && (
-                    <p className="text-xs text-red-600">{errors.customerName}</p>
+                    <p className="text-xs text-red-600 flex items-center gap-1 font-medium mt-1">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{errors.customerName}</span>
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-[#74716D]">
+                  <label className="block text-xs font-semibold text-[#181818]">
                     Phone Number <span className="text-[#FF5938]">*</span>
                   </label>
                   <input
@@ -514,19 +517,22 @@ function CheckoutContent() {
                     value={formData.customerPhone}
                     onChange={handleChange}
                     placeholder="01712345678"
-                    className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all ${
+                    className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all ${
                       errors.customerPhone ? "border-red-500 bg-red-50/20" : "border-[#E7E3DC]"
                     }`}
                   />
                   {errors.customerPhone && (
-                    <p className="text-xs text-red-600">{errors.customerPhone}</p>
+                    <p className="text-xs text-red-600 flex items-center gap-1 font-medium mt-1">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{errors.customerPhone}</span>
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-[#74716D]">
-                  Email Address <span className="text-[#74716D]/80 font-normal">(for receipt &amp; parcel tracking)</span>
+                <label className="block text-xs font-semibold text-[#181818]">
+                  Email Address <span className="text-[#74716D] font-normal">(for digital invoice &amp; parcel tracking)</span>
                 </label>
                 <input
                   type="email"
@@ -534,12 +540,15 @@ function CheckoutContent() {
                   value={formData.customerEmail}
                   onChange={handleChange}
                   placeholder="name@example.com"
-                  className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all ${
+                  className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all ${
                     errors.customerEmail ? "border-red-500 bg-red-50/20" : "border-[#E7E3DC]"
                   }`}
                 />
                 {errors.customerEmail && (
-                  <p className="text-xs text-red-600">{errors.customerEmail}</p>
+                  <p className="text-xs text-red-600 flex items-center gap-1 font-medium mt-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.customerEmail}</span>
+                  </p>
                 )}
               </div>
             </div>
@@ -552,25 +561,25 @@ function CheckoutContent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-[#74716D]">
+                  <label className="block text-xs font-semibold text-[#181818]">
                     Division <span className="text-[#FF5938]">*</span>
                   </label>
                   <select
                     name="division"
                     value={formData.division}
                     onChange={handleChange}
-                    className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg px-3 py-2.5 text-sm text-[#181818] focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                    className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg px-3 py-2.5 text-sm text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all cursor-pointer"
                   >
                     {BD_DIVISIONS.map((div) => (
                       <option key={div} value={div}>
-                        {div} {div === "Dhaka" ? "(Delivery ৳80)" : "(Delivery ৳150)"}
+                        {div} {div === "Dhaka" ? "— Inside Dhaka (৳80)" : "— Outside Dhaka (৳150)"}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-[#74716D]">
+                  <label className="block text-xs font-semibold text-[#181818]">
                     District / City <span className="text-[#FF5938]">*</span>
                   </label>
                   <input
@@ -579,18 +588,21 @@ function CheckoutContent() {
                     value={formData.district}
                     onChange={handleChange}
                     placeholder="e.g. Dhaka, Chattogram, Sylhet"
-                    className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all ${
+                    className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all ${
                       errors.district ? "border-red-500 bg-red-50/20" : "border-[#E7E3DC]"
                     }`}
                   />
                   {errors.district && (
-                    <p className="text-xs text-red-600">{errors.district}</p>
+                    <p className="text-xs text-red-600 flex items-center gap-1 font-medium mt-1">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{errors.district}</span>
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-[#74716D]">
+                <label className="block text-xs font-semibold text-[#181818]">
                   Street Address &amp; Landmarks <span className="text-[#FF5938]">*</span>
                 </label>
                 <textarea
@@ -599,18 +611,21 @@ function CheckoutContent() {
                   value={formData.deliveryAddress}
                   onChange={handleChange}
                   placeholder="House number, road number, apartment/flat, landmark, police station (Thana)..."
-                  className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all ${
+                  className={`w-full bg-[#F7F5F0] border rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all ${
                     errors.deliveryAddress ? "border-red-500 bg-red-50/20" : "border-[#E7E3DC]"
                   }`}
                 />
                 {errors.deliveryAddress && (
-                  <p className="text-xs text-red-600">{errors.deliveryAddress}</p>
+                  <p className="text-xs text-red-600 flex items-center gap-1 font-medium mt-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.deliveryAddress}</span>
+                  </p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-[#74716D]">
-                  Delivery Instructions <span className="text-[#74716D]/80 font-normal">(optional)</span>
+                <label className="block text-xs font-semibold text-[#181818]">
+                  Delivery Instructions <span className="text-[#74716D] font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -618,7 +633,7 @@ function CheckoutContent() {
                   value={formData.orderNotes}
                   onChange={handleChange}
                   placeholder="e.g. deliver after 4 PM, call before arriving"
-                  className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:bg-white transition-all"
+                  className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg px-3.5 py-2.5 text-sm text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
                 />
               </div>
             </div>
@@ -634,8 +649,8 @@ function CheckoutContent() {
                 <label
                   className={`p-4 rounded-xl border-2 flex items-start gap-3.5 cursor-pointer transition-all ${
                     formData.paymentMethod === "cash_on_delivery"
-                      ? "border-[#FF5938] bg-[#FFF5F3]"
-                      : "border-[#E7E3DC] bg-white hover:border-[#74716D]/40"
+                      ? "border-[#FF5938] bg-[#FFF5F3] ring-1 ring-[#FF5938]/20"
+                      : "border-[#E7E3DC] bg-white hover:border-[#181818]/30"
                   }`}
                 >
                   <input
@@ -647,14 +662,19 @@ function CheckoutContent() {
                     className="accent-[#FF5938] mt-1 w-4 h-4"
                   />
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <Banknote className="w-4 h-4 text-[#FF5938]" />
-                      <h4 className="text-sm font-semibold text-[#181818]">
-                        Cash on Delivery (COD)
-                      </h4>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Banknote className="w-4 h-4 text-[#FF5938]" />
+                        <h4 className="text-sm font-bold text-[#181818]">
+                          Cash on Delivery (COD)
+                        </h4>
+                      </div>
+                      <span className="text-[10px] bg-stone-100 text-[#181818] font-semibold px-2 py-0.5 rounded-full border border-stone-200">
+                        Pay at doorstep
+                      </span>
                     </div>
-                    <p className="text-xs text-[#74716D] mt-1">
-                      Pay in cash upon doorstep delivery to your location in {formData.district || formData.division}.
+                    <p className="text-xs text-[#74716D] mt-1.5 leading-relaxed">
+                      Pay in cash upon parcel handover anywhere in {formData.district || formData.division || "Bangladesh"}. Please keep exact cash ready.
                     </p>
                   </div>
                 </label>
@@ -663,8 +683,8 @@ function CheckoutContent() {
                 <label
                   className={`p-4 rounded-xl border-2 flex items-start gap-3.5 cursor-pointer transition-all ${
                     formData.paymentMethod === "sslcommerz"
-                      ? "border-[#FF5938] bg-[#FFF5F3]"
-                      : "border-[#E7E3DC] bg-white hover:border-[#74716D]/40"
+                      ? "border-[#FF5938] bg-[#FFF5F3] ring-1 ring-[#FF5938]/20"
+                      : "border-[#E7E3DC] bg-white hover:border-[#181818]/30"
                   }`}
                 >
                   <input
@@ -676,38 +696,43 @@ function CheckoutContent() {
                     className="accent-[#FF5938] mt-1 w-4 h-4"
                   />
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-[#FF5938]" />
-                      <h4 className="text-sm font-semibold text-[#181818]">
-                        Online Payment (SSLCOMMERZ)
-                      </h4>
-                      <span className="text-[10px] bg-[#F4D66D] text-[#181818] font-bold px-2 py-0.5 rounded-full">
-                        Instant
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-4 h-4 text-[#FF5938]" />
+                        <h4 className="text-sm font-bold text-[#181818]">
+                          Online Payment (Instant Confirmation)
+                        </h4>
+                      </div>
+                      <span className="text-[10px] bg-[#F4D66D] text-[#181818] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                        bKash • Nagad • Cards
                       </span>
                     </div>
-                    <p className="text-xs text-[#74716D] mt-1">
-                      Pay instantly with bKash, Nagad, Rocket, Visa, Mastercard, AMEX, or local Internet Banking.
+                    <p className="text-xs text-[#74716D] mt-1.5 leading-relaxed">
+                      Instant secure checkout via SSLCOMMERZ gateway: bKash, Nagad, Rocket, Visa, Mastercard, AMEX, and Bangladeshi internet banking.
                     </p>
                   </div>
                 </label>
               </div>
 
-              <div className="pt-2">
-                <label className="flex items-start gap-2.5 cursor-pointer">
+              <div className="pt-3 border-t border-[#F2EFEB]">
+                <label className="flex items-start gap-3 cursor-pointer py-1">
                   <input
                     type="checkbox"
                     name="agreedToTerms"
                     checked={formData.agreedToTerms}
                     onChange={handleChange}
-                    className="mt-1 w-4 h-4 accent-[#FF5938]"
+                    className="mt-0.5 w-4 h-4 accent-[#FF5938] rounded shrink-0"
                   />
                   <span className="text-xs text-[#74716D] leading-relaxed">
-                    I acknowledge that I am placing an order with FLASHWEAR for{" "}
-                    <strong className="text-[#181818]">{formatBDT(totalAmount)}</strong> and agree to the store terms.
+                    I acknowledge that I am placing an authentic order with FLASHWEAR for{" "}
+                    <strong className="text-[#181818] font-semibold">{formatBDT(totalAmount)}</strong> and accept the return and shipping terms.
                   </span>
                 </label>
                 {errors.agreedToTerms && (
-                  <p className="text-xs text-red-600 mt-1">{errors.agreedToTerms}</p>
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>{errors.agreedToTerms}</span>
+                  </p>
                 )}
               </div>
             </div>
@@ -751,7 +776,7 @@ function CheckoutContent() {
 
               {/* Coupon Box in Checkout */}
               <div className="space-y-2 pt-2 border-t border-[#E7E3DC]">
-                <label className="block text-xs font-medium text-[#74716D]">
+                <label className="block text-xs font-semibold text-[#181818]">
                   Have a coupon code?
                 </label>
                 <div className="flex gap-2">
@@ -762,14 +787,14 @@ function CheckoutContent() {
                       placeholder="FLASH10, WELCOME200"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-8 pr-2 py-2 text-xs font-medium uppercase text-[#181818] focus:outline-none focus:border-[#FF5938] transition-colors"
+                      className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg pl-8 pr-2 py-2 text-xs font-semibold uppercase text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => handleValidateCoupon(couponCode)}
                     disabled={couponLoading || !couponCode.trim()}
-                    className="px-4 py-2 bg-[#181818] hover:bg-[#2e2e2e] disabled:opacity-40 text-xs font-semibold text-white rounded-lg transition-colors"
+                    className="px-4 py-2 bg-[#181818] hover:bg-[#2e2e2e] disabled:opacity-40 text-xs font-semibold text-white rounded-lg transition-colors cursor-pointer"
                   >
                     {couponLoading ? "..." : "Apply"}
                   </button>
@@ -803,11 +828,11 @@ function CheckoutContent() {
               {loyaltyData?.settings?.is_active && (
                 <div className="space-y-2 pt-2 border-t border-[#E7E3DC]">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-[#74716D] flex items-center gap-1.5">
+                    <label className="text-xs font-semibold text-[#181818] flex items-center gap-1.5">
                       <Award className="w-3.5 h-3.5 text-[#FF5938]" />
                       <span>Loyalty Points</span>
                     </label>
-                    <span className="text-xs font-semibold text-[#FF5938]">
+                    <span className="text-xs font-bold text-[#FF5938]">
                       {loyaltyData.availablePoints} pts available
                     </span>
                   </div>
@@ -836,7 +861,7 @@ function CheckoutContent() {
                           value={pointsToRedeemInput || ""}
                           onChange={(e) => setPointsToRedeemInput(parseInt(e.target.value) || 0)}
                           placeholder={`Min ${loyaltyData.settings.min_redemption_points || 100} pts`}
-                          className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938]"
+                          className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
                         />
                         <button
                           type="button"
@@ -845,7 +870,7 @@ function CheckoutContent() {
                             loyaltyData.availablePoints < (loyaltyData.settings.min_redemption_points || 100) ||
                             (appliedCoupon !== null && !loyaltyData.settings.can_combine_with_coupon)
                           }
-                          className="px-4 py-2 bg-[#181818] hover:bg-[#2e2e2e] disabled:opacity-40 text-xs font-semibold text-white rounded-lg transition-colors"
+                          className="px-4 py-2 bg-[#181818] hover:bg-[#2e2e2e] disabled:opacity-40 text-xs font-semibold text-white rounded-lg transition-colors cursor-pointer"
                         >
                           Redeem
                         </button>
@@ -869,7 +894,7 @@ function CheckoutContent() {
 
               {/* Referral Code Box */}
               <div className="space-y-2 pt-2 border-t border-[#E7E3DC]">
-                <label className="block text-xs font-medium text-[#74716D] flex items-center gap-1.5">
+                <label className="block text-xs font-semibold text-[#181818] flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-[#FF5938]" />
                   <span>Friend Referral Code</span>
                 </label>
@@ -879,13 +904,13 @@ function CheckoutContent() {
                     placeholder="e.g. FLASH-94287"
                     value={referralCodeInput}
                     onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
-                    className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs uppercase font-medium text-[#181818] focus:outline-none focus:border-[#FF5938]"
+                    className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs uppercase font-medium text-[#181818] placeholder-[#74716D]/60 focus:outline-none focus:border-[#FF5938] focus:ring-2 focus:ring-[#FF5938]/15 focus:bg-white transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => handleValidateReferral(referralCodeInput)}
                     disabled={referralLoading || !referralCodeInput.trim()}
-                    className="px-4 py-2 bg-[#181818] hover:bg-[#2e2e2e] disabled:opacity-40 text-xs font-semibold text-white rounded-lg transition-colors"
+                    className="px-4 py-2 bg-[#181818] hover:bg-[#2e2e2e] disabled:opacity-40 text-xs font-semibold text-white rounded-lg transition-colors cursor-pointer"
                   >
                     {referralLoading ? "..." : "Claim"}
                   </button>
@@ -950,9 +975,12 @@ function CheckoutContent() {
                   <span className="font-medium text-[#181818]">{formatBDT(deliveryFee)}</span>
                 </div>
 
-                <div className="pt-3 border-t border-[#E7E3DC] flex justify-between items-baseline font-bold text-sm">
-                  <span className="text-[#181818]">Total Amount</span>
-                  <span className="text-xl text-[#FF5938]">
+                <div className="pt-3 border-t border-[#E7E3DC] flex justify-between items-baseline">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-[#181818]">Total to Pay</span>
+                    <span className="text-[11px] text-[#74716D]">VAT &amp; Courier included</span>
+                  </div>
+                  <span className="text-2xl font-extrabold text-[#181818] tracking-tight">
                     {formatBDT(totalAmount)}
                   </span>
                 </div>
@@ -962,22 +990,24 @@ function CheckoutContent() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-12 bg-[#FF5938] hover:bg-[#E64525] disabled:bg-zinc-300 disabled:text-zinc-500 text-white font-medium text-sm rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
+                className="w-full h-12 bg-[#FF5938] hover:bg-[#E64525] disabled:bg-zinc-300 disabled:text-zinc-500 text-white font-bold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.99] cursor-pointer"
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                    {formData.paymentMethod === "sslcommerz"
-                      ? "Connecting to gateway..."
-                      : "Placing order..."}
+                    <span>
+                      {formData.paymentMethod === "sslcommerz"
+                        ? "Connecting to gateway..."
+                        : "Placing order..."}
+                    </span>
                   </span>
                 ) : (
                   <>
                     <Lock className="w-4 h-4" />
                     <span>
                       {formData.paymentMethod === "sslcommerz"
-                        ? "Proceed to payment"
-                        : "Place order (Cash on Delivery)"}
+                        ? `Pay with SSLCOMMERZ — ${formatBDT(totalAmount)}`
+                        : `Place Order (COD) — ${formatBDT(totalAmount)}`}
                     </span>
                   </>
                 )}

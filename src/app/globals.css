@@ -80,3 +80,16 @@
   transform: translateY(-2px);
   box-shadow: 0 10px 25px -5px rgba(24, 24, 24, 0.06);
 }
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

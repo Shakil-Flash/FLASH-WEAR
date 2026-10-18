@@ -19,7 +19,6 @@ export default async function HomePage() {
 
   const newArrivals = allProducts.slice(0, 4);
   const bestsellers = allProducts.filter((p) => p.is_bestseller).slice(0, 4);
-  const featuredCollection = collections[0];
 
   return (
     <div className="flex flex-col bg-[#F7F5F0]">
@@ -30,7 +29,7 @@ export default async function HomePage() {
       <FeaturedCategories categories={categories} />
 
       {/* 3. New Arrivals Product Grid */}
-      <section className="py-16 sm:py-20 bg-[#F7F5F0] border-b border-[#E7E3DC]">
+      <section className="py-14 sm:py-20 bg-[#F7F5F0] border-b border-[#E7E3DC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-[#E7E3DC]">
             <div>
@@ -50,7 +49,7 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
             {newArrivals.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -61,9 +60,9 @@ export default async function HomePage() {
       {/* 4. Brand Moment */}
       <BrandMoment />
 
-      {/* 5. Bestsellers Curated Grid */}
+      {/* 5. Second Shopping Opportunity: Community Favorites (Bestsellers) */}
       {bestsellers.length > 0 && (
-        <section className="py-16 sm:py-20 bg-white border-b border-[#E7E3DC]">
+        <section className="py-14 sm:py-20 bg-white border-b border-[#E7E3DC]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-[#E7E3DC]">
               <div>
@@ -83,7 +82,7 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
               {bestsellers.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -92,50 +91,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* 6. Featured Capsule Spotlight (when available) */}
-      {featuredCollection && (
-        <section className="py-16 sm:py-20 bg-[#F7F5F0] border-b border-[#E7E3DC]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="relative rounded-lg overflow-hidden border border-[#E7E3DC] bg-[#181818] text-white">
-              <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
-                <div className="lg:col-span-6 p-8 sm:p-12 lg:p-16 space-y-5">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#F4D66D]">
-                    Limited Capsule
-                  </span>
-                  <h3 className="font-display text-2xl sm:text-4xl font-bold tracking-tight leading-tight">
-                    {featuredCollection.name}
-                  </h3>
-                  <p className="text-sm text-white/70 leading-relaxed max-w-md">
-                    {featuredCollection.description}
-                  </p>
-                  <div className="pt-2">
-                    <Link
-                      href={`/collections/${featuredCollection.slug}`}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF5938] hover:bg-[#E64525] text-white text-xs font-semibold rounded-md transition-colors"
-                    >
-                      <span>Explore collection</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-6 h-64 sm:h-96 lg:h-full relative overflow-hidden bg-zinc-900">
-                  <img
-                    src={
-                      featuredCollection.image_url ||
-                      "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=80"
-                    }
-                    alt={featuredCollection.name}
-                    className="w-full h-full object-cover object-center"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 7. Discreet Newsletter Signup */}
+      {/* 6. Discreet Newsletter Signup */}
       <NewsletterSection />
     </div>
   );

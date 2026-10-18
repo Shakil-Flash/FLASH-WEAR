@@ -91,10 +91,10 @@ export function CartDrawer() {
               {items.map((item) => (
                 <div
                   key={item.variantId}
-                  className="flex gap-3.5 p-3.5 bg-white border border-[#E7E3DC] rounded-md shadow-sm"
+                  className="flex gap-3.5 p-3.5 bg-white border border-[#E7E3DC] rounded-lg shadow-sm"
                 >
                   {/* Thumbnail */}
-                  <div className="relative w-18 h-22 sm:w-20 sm:h-24 bg-[#F2EFEB] rounded overflow-hidden flex-shrink-0">
+                  <div className="relative w-20 h-24 bg-[#F2EFEB] rounded-md overflow-hidden flex-shrink-0 border border-[#E7E3DC]/60">
                     <img
                       src={item.imageUrl || "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=400&q=80"}
                       alt={item.productName}
@@ -103,7 +103,7 @@ export function CartDrawer() {
                   </div>
 
                   {/* Item Details */}
-                  <div className="flex-1 flex flex-col justify-between">
+                  <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
                       <div className="flex justify-between items-start gap-2">
                         <Link
@@ -115,37 +115,40 @@ export function CartDrawer() {
                         </Link>
                         <button
                           onClick={() => removeItem(item.variantId)}
-                          className="text-[#74716D] hover:text-red-500 p-1 transition-colors"
+                          className="text-[#74716D] hover:text-red-500 p-1.5 -mr-1 -mt-1 rounded-md hover:bg-[#F7F5F0] transition-colors"
                           title="Remove item"
+                          aria-label={`Remove ${item.productName} from bag`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
-                      <div className="mt-1 flex items-center gap-2 text-xs text-[#74716D]">
-                        <span>Size: <strong className="text-[#181818]">{item.size}</strong></span>
+                      <div className="mt-1 flex items-center gap-2 text-[11px] text-[#74716D]">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#F7F5F0] border border-[#E7E3DC] text-[#181818] font-medium">
+                          {item.size}
+                        </span>
                         <span>•</span>
-                        <span>Color: <strong className="text-[#181818]">{item.color}</strong></span>
+                        <span>{item.color}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between mt-3">
-                      {/* Quantity selector */}
-                      <div className="flex items-center border border-[#E7E3DC] bg-[#F7F5F0] rounded">
+                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#F7F5F0]">
+                      {/* Quantity selector with generous touch targets */}
+                      <div className="flex items-center border border-[#E7E3DC] bg-[#F7F5F0] rounded-md">
                         <button
                           onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                          className="p-1 text-[#74716D] hover:text-[#181818] transition-colors"
+                          className="w-7 h-7 flex items-center justify-center text-[#74716D] hover:text-[#181818] hover:bg-white rounded-l transition-colors"
                           aria-label="Decrease quantity"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
-                        <span className="px-2 text-xs font-semibold text-[#181818]">
+                        <span className="w-7 text-center text-xs font-semibold text-[#181818]">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                           disabled={item.quantity >= item.maxInventory}
-                          className="p-1 text-[#74716D] hover:text-[#181818] disabled:opacity-30 transition-colors"
+                          className="w-7 h-7 flex items-center justify-center text-[#74716D] hover:text-[#181818] hover:bg-white rounded-r disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                           aria-label="Increase quantity"
                         >
                           <Plus className="w-3 h-3" />
