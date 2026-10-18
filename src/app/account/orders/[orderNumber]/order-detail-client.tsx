@@ -11,7 +11,6 @@ import {
   CheckCircle,
   ExternalLink,
   RotateCcw,
-  Clock,
   MapPin,
   ArrowLeft,
 } from "lucide-react";
@@ -34,7 +33,6 @@ export function OrderDetailClient({ order }: Props) {
   const getStepIndex = (status: string) => {
     switch (status) {
       case "pending":
-        return 0;
       case "confirmed":
         return 0;
       case "processing":
@@ -56,7 +54,7 @@ export function OrderDetailClient({ order }: Props) {
       <div className="flex items-center justify-between">
         <Link
           href="/account/orders"
-          className="text-xs uppercase font-bold text-zinc-400 hover:text-white flex items-center gap-1.5"
+          className="text-xs font-semibold text-[#74716D] hover:text-[#181818] flex items-center gap-1.5 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to All Orders</span>
@@ -66,41 +64,41 @@ export function OrderDetailClient({ order }: Props) {
         {!isCancelled && (
           <button
             onClick={() => setReturnModalOpen(true)}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors border border-zinc-700"
+            className="px-4 py-2 bg-white hover:bg-[#F7F5F0] text-[#181818] text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors border border-[#E7E3DC] shadow-xs"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-[#ccff00]" />
+            <RotateCcw className="w-3.5 h-3.5 text-[#FF5938]" />
             <span>Request Return / Exchange</span>
           </button>
         )}
       </div>
 
       {/* Progress Card */}
-      <div className="bg-[#121214] border border-zinc-800 p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-zinc-800">
+      <div className="bg-white border border-[#E7E3DC] rounded-xl p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-[#E7E3DC]">
           <div>
-            <span className="text-xs uppercase tracking-widest text-[#ccff00] font-mono">
-              {"// ORDER SUMMARY"}
+            <span className="text-xs uppercase tracking-wider font-semibold text-[#FF5938]">
+              Order Summary
             </span>
-            <h1 className="text-2xl font-black font-mono text-white mt-1">
+            <h1 className="text-2xl font-bold text-[#181818] mt-1">
               {order.order_number}
             </h1>
-            <p className="text-xs text-zinc-400 mt-1">
+            <p className="text-xs text-[#74716D] mt-1">
               Placed on {new Date(order.created_at).toLocaleString()}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`text-xs px-3 py-1 uppercase font-bold ${
+              className={`text-xs px-3 py-1 font-medium rounded-full ${
                 order.payment_status === "paid"
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                  : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-amber-50 text-amber-700 border border-amber-200"
               }`}
             >
               Payment: {order.payment_status}
             </span>
-            <span className="text-xs px-3 py-1 uppercase font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
-              Fulfillment: {order.status}
+            <span className="text-xs px-3 py-1 font-medium rounded-full bg-[#F7F5F0] text-[#181818] border border-[#E7E3DC]">
+              Status: {order.status}
             </span>
           </div>
         </div>
@@ -116,15 +114,15 @@ export function OrderDetailClient({ order }: Props) {
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs mb-2 z-10 transition-colors ${
                         isPassed
-                          ? "bg-[#ccff00] text-black ring-4 ring-[#ccff00]/20"
-                          : "bg-zinc-800 text-zinc-500"
+                          ? "bg-[#FF5938] text-white ring-4 ring-[#FF5938]/15"
+                          : "bg-[#F7F5F0] border border-[#E7E3DC] text-[#74716D]"
                       }`}
                     >
                       {isPassed ? <CheckCircle className="w-4 h-4" /> : idx + 1}
                     </div>
                     <span
-                      className={`text-xs uppercase tracking-wider font-bold ${
-                        isPassed ? "text-white" : "text-zinc-500"
+                      className={`text-xs uppercase tracking-wider font-semibold ${
+                        isPassed ? "text-[#181818]" : "text-[#74716D]"
                       }`}
                     >
                       {s.label}
@@ -133,11 +131,11 @@ export function OrderDetailClient({ order }: Props) {
                 );
               })}
               {/* Connecting Line */}
-              <div className="absolute top-4 left-1/8 right-1/8 h-0.5 bg-zinc-800 -z-0" />
+              <div className="absolute top-4 left-1/8 right-1/8 h-0.5 bg-[#E7E3DC] -z-0" />
             </div>
           </div>
         ) : (
-          <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
             This order has been cancelled.
           </div>
         )}
@@ -145,11 +143,11 @@ export function OrderDetailClient({ order }: Props) {
 
       {/* Courier & Tracking Details */}
       {order.courier_consignment_id && (
-        <div className="bg-[#121214] border border-zinc-800 p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+        <div className="bg-white border border-[#E7E3DC] rounded-xl p-6 shadow-sm">
+          <div className="flex items-center justify-between pb-4 border-b border-[#E7E3DC]">
             <div className="flex items-center gap-2">
-              <Truck className="w-5 h-5 text-[#ccff00]" />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+              <Truck className="w-5 h-5 text-[#FF5938]" />
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[#181818]">
                 Courier Delivery Information
               </h2>
             </div>
@@ -158,7 +156,7 @@ export function OrderDetailClient({ order }: Props) {
                 href={order.courier_tracking_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-[#ccff00] text-black text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 hover:bg-[#b8e600]"
+                className="px-3.5 py-1.5 bg-[#FF5938] text-white text-xs font-medium rounded-lg flex items-center gap-1.5 hover:bg-[#E64525] transition-colors"
               >
                 <span>Live Courier Tracking</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -168,16 +166,16 @@ export function OrderDetailClient({ order }: Props) {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 text-xs">
             <div>
-              <span className="text-zinc-500 block uppercase mb-1">Courier Partner</span>
-              <strong className="text-white text-sm">{order.courier_name || "Pathao Courier"}</strong>
+              <span className="text-[#74716D] block uppercase mb-1">Courier Partner</span>
+              <strong className="text-[#181818] text-sm">{order.courier_name || "Pathao Courier"}</strong>
             </div>
             <div>
-              <span className="text-zinc-500 block uppercase mb-1">Consignment ID</span>
-              <strong className="text-[#ccff00] font-mono text-sm">{order.courier_consignment_id}</strong>
+              <span className="text-[#74716D] block uppercase mb-1">Consignment ID</span>
+              <strong className="text-[#FF5938] text-sm">{order.courier_consignment_id}</strong>
             </div>
             <div>
-              <span className="text-zinc-500 block uppercase mb-1">Shipment Status</span>
-              <strong className="text-white uppercase text-sm">
+              <span className="text-[#74716D] block uppercase mb-1">Shipment Status</span>
+              <strong className="text-[#181818] capitalize text-sm">
                 {(order.shipment_status || "accepted_by_courier").replace(/_/g, " ")}
               </strong>
             </div>
@@ -188,26 +186,26 @@ export function OrderDetailClient({ order }: Props) {
       {/* Items & Financial Totals */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Items List */}
-        <div className="lg:col-span-2 bg-[#121214] border border-zinc-800 p-6">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-white mb-4 pb-2 border-b border-zinc-800">
+        <div className="lg:col-span-2 bg-white border border-[#E7E3DC] rounded-xl p-6 shadow-sm">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-[#181818] mb-4 pb-2 border-b border-[#E7E3DC]">
             Items Ordered ({order.items?.length || 0})
           </h2>
 
-          <div className="divide-y divide-zinc-800">
+          <div className="divide-y divide-[#E7E3DC]">
             {order.items?.map((item) => (
-              <div key={item.id} className="py-3 flex items-center justify-between text-xs">
+              <div key={item.id} className="py-3.5 flex items-center justify-between text-xs">
                 <div>
-                  <h3 className="font-bold text-white text-sm">{item.product_name}</h3>
-                  <p className="text-zinc-400 mt-0.5">
-                    Size: <span className="text-white font-medium">{item.size}</span> &bull; Color:{" "}
-                    <span className="text-white font-medium">{item.color}</span> &bull; SKU:{" "}
-                    <span className="font-mono">{item.sku}</span>
+                  <h3 className="font-semibold text-[#181818] text-sm">{item.product_name}</h3>
+                  <p className="text-[#74716D] mt-0.5">
+                    Size: <span className="text-[#181818] font-medium">{item.size}</span> &bull; Color:{" "}
+                    <span className="text-[#181818] font-medium">{item.color}</span> &bull; SKU:{" "}
+                    <span>{item.sku}</span>
                   </p>
-                  <p className="text-zinc-500 mt-1">
+                  <p className="text-[#74716D] mt-1">
                     {item.quantity} x {formatBDT(item.unit_price)}
                   </p>
                 </div>
-                <div className="font-mono text-sm font-bold text-[#ccff00]">
+                <div className="text-sm font-bold text-[#181818]">
                   {formatBDT(item.line_total)}
                 </div>
               </div>
@@ -217,53 +215,53 @@ export function OrderDetailClient({ order }: Props) {
 
         {/* Financial & Delivery Address */}
         <div className="space-y-6">
-          <div className="bg-[#121214] border border-zinc-800 p-6">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-white mb-4 pb-2 border-b border-zinc-800">
+          <div className="bg-white border border-[#E7E3DC] rounded-xl p-6 shadow-sm">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#181818] mb-4 pb-2 border-b border-[#E7E3DC]">
               Payment Summary
             </h2>
 
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between text-[#74716D]">
                 <span>Subtotal</span>
-                <span className="text-white">{formatBDT(order.subtotal)}</span>
+                <span className="text-[#181818] font-medium">{formatBDT(order.subtotal)}</span>
               </div>
 
               {order.discount_amount > 0 && (
-                <div className="flex justify-between text-emerald-400 font-semibold">
+                <div className="flex justify-between text-emerald-700 font-semibold">
                   <span>Discount ({order.coupon_code || "COUPON"})</span>
                   <span>-{formatBDT(order.discount_amount)}</span>
                 </div>
               )}
 
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between text-[#74716D]">
                 <span>Delivery Fee ({order.division})</span>
-                <span className="text-white">{formatBDT(order.delivery_fee)}</span>
+                <span className="text-[#181818] font-medium">{formatBDT(order.delivery_fee)}</span>
               </div>
 
-              <div className="pt-3 border-t border-zinc-800 flex justify-between items-center text-sm font-bold">
-                <span className="text-white">Total Amount</span>
-                <span className="text-[#ccff00] font-mono text-base">{formatBDT(order.total_amount)}</span>
+              <div className="pt-3 border-t border-[#E7E3DC] flex justify-between items-center text-sm font-bold">
+                <span className="text-[#181818]">Total Amount</span>
+                <span className="text-[#FF5938] text-base">{formatBDT(order.total_amount)}</span>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-zinc-800 text-[11px] text-zinc-400">
+              <div className="mt-4 pt-3 border-t border-[#E7E3DC] text-[11px] text-[#74716D]">
                 <span>Payment Method: </span>
-                <strong className="text-white uppercase">
+                <strong className="text-[#181818] uppercase">
                   {order.payment_method === "sslcommerz" ? "Online (SSLCOMMERZ)" : "Cash On Delivery"}
                 </strong>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#121214] border border-zinc-800 p-6">
-            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-zinc-800">
-              <MapPin className="w-4 h-4 text-[#ccff00]" />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white">Delivery Address</h2>
+          <div className="bg-white border border-[#E7E3DC] rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#E7E3DC]">
+              <MapPin className="w-4 h-4 text-[#FF5938]" />
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[#181818]">Delivery Address</h2>
             </div>
-            <div className="text-xs text-zinc-300 space-y-1">
-              <p className="font-bold text-white">{order.customer_name}</p>
+            <div className="text-xs text-[#181818] space-y-1 leading-relaxed">
+              <p className="font-semibold">{order.customer_name}</p>
               <p>{order.delivery_address}</p>
               <p>{order.district}, {order.division}</p>
-              <p className="font-mono text-zinc-400 pt-1">Phone: {order.customer_phone}</p>
+              <p className="text-[#74716D] pt-1">Phone: {order.customer_phone}</p>
             </div>
           </div>
         </div>

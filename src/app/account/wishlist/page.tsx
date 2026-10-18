@@ -11,20 +11,20 @@ export default async function WishlistPage() {
   const wishlist = await getCustomerWishlist("usr-demo");
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-white pt-28 pb-20">
+    <div className="min-h-screen bg-[#F7F5F0] text-[#181818] py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <p className="text-xs uppercase tracking-widest text-[#ccff00] font-mono mb-1">
-            {"// SAVED APPAREL"}
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#FF5938] mb-1">
+            Saved Apparel
           </p>
-          <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#181818]">
             My Wishlist
           </h1>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col md:flex-row gap-8 items-start">
           <AccountNav />
-          <main className="flex-1">
+          <main className="flex-1 w-full">
             <WishlistClient initialWishlist={wishlist} />
           </main>
         </div>

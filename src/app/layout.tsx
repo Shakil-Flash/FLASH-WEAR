@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
-import { AnnouncementBar } from "@/components/announcement-bar";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CartDrawer } from "@/components/cart-drawer";
@@ -9,15 +8,15 @@ import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 
 export const metadata: Metadata = {
   title: {
-    default: "FLASHWEAR — Contemporary Engineered Streetwear",
+    default: "FLASHWEAR — Everyday Streetwear Turned Up",
     template: "%s | FLASHWEAR",
   },
   description:
-    "Premium contemporary streetwear brand engineered in Dhaka, Bangladesh. Heavyweight 480 GSM French terry hoodies, oversized drop-shoulder tees, and tactical cargo trousers.",
+    "Authentic contemporary streetwear. Heavyweight cotton essentials, relaxed fits, and easy pieces crafted for Bangladesh.",
   keywords: [
     "FLASHWEAR",
     "streetwear Bangladesh",
-    "Dhaka streetwear",
+    "Dhaka clothing brand",
     "oversized hoodie",
     "heavyweight tee",
     "cargo pants Dhaka",
@@ -25,9 +24,9 @@ export const metadata: Metadata = {
   ],
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   openGraph: {
-    title: "FLASHWEAR — Contemporary Engineered Streetwear",
+    title: "FLASHWEAR — Everyday Streetwear Turned Up",
     description:
-      "Premium contemporary streetwear brand engineered in Dhaka, Bangladesh. Drop 01 available nationwide via Cash on Delivery.",
+      "Easy pieces. Big mood. Find your next favorite fit with nationwide Cash on Delivery in Bangladesh.",
     url: "/",
     siteName: "FLASHWEAR",
     locale: "en_BD",
@@ -45,11 +44,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-[#0a0a0b] text-[#f4f4f5] min-h-screen flex flex-col font-sans">
+    <html lang="en">
+      <body className="bg-[#F7F5F0] text-[#181818] min-h-screen flex flex-col font-sans">
         <CartProvider>
           <GoogleAnalytics />
-          <AnnouncementBar />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

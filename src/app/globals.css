@@ -1,38 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 98%;
+    --background: 40 20% 96%; /* Warm paper #F7F5F0 */
+    --foreground: 0 0% 9.5%;   /* Primary ink #181818 */
 
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;        /* Pure white */
+    --card-foreground: 0 0% 9.5%;
 
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9.5%;
 
-    --primary: 76 100% 50%; /* Electric Lime #ccff00 */
-    --primary-foreground: 0 0% 0%;
+    --primary: 10 100% 61%;   /* Flash Orange #FF5938 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 40 14% 93%;
+    --secondary-foreground: 0 0% 9.5%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 63%;
+    --muted: 40 14% 91%;
+    --muted-foreground: 30 3% 44%; /* Muted Gray #74716D */
 
-    --accent: 76 100% 50%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 10 100% 61%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 76 100% 50%;
+    --border: 38 18% 88%;     /* Light Divider #E7E3DC */
+    --input: 38 18% 88%;
+    --ring: 10 100% 61%;
 
-    --radius: 0.25rem;
+    --radius: 0.375rem;
   }
 }
 
@@ -41,39 +43,40 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#0a0a0b] text-[#f4f4f5] antialiased selection:bg-[#ccff00] selection:text-black;
+    @apply bg-[#F7F5F0] text-[#181818] antialiased selection:bg-[#FF5938] selection:text-white;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
   }
 }
 
-/* Custom Editorial Scrollbar */
+/* Restrained Minimal Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0b;
+  background: #F7F5F0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #D9D4CB;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #B8B2A6;
 }
 
-/* Streetwear Badge & Accent Glows */
-.lime-glow {
-  box-shadow: 0 0 20px -5px rgba(204, 255, 0, 0.35);
+/* Subtle Interactive Transitions */
+.editorial-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.subtle-border {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.subtle-border-hover:hover {
-  border-color: rgba(204, 255, 0, 0.4);
+.editorial-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(24, 24, 24, 0.06);
 }

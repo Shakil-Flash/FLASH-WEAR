@@ -91,7 +91,7 @@ export function ReturnRequestModal({ order, isOpen, onClose }: ReturnModalProps)
         throw new Error(data.error || "Failed to submit request");
       }
 
-      setSuccessMsg("Your request has been logged successfully! Our team will inspect and review your request.");
+      setSuccessMsg("Your request has been logged successfully! Our team will review your request.");
       setTimeout(() => {
         onClose();
       }, 2000);
@@ -103,38 +103,38 @@ export function ReturnRequestModal({ order, isOpen, onClose }: ReturnModalProps)
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#141417] border border-zinc-800 w-full max-w-lg p-6 relative shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="bg-white border border-[#E7E3DC] rounded-xl w-full max-w-lg p-6 relative shadow-xl overflow-y-auto max-h-[90vh]">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-400 hover:text-white"
+          className="absolute top-4 right-4 text-[#74716D] hover:text-[#181818] transition-colors"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="mb-6">
-          <p className="text-xs uppercase tracking-widest text-[#ccff00] font-mono mb-1">
-            {"// RETURN / EXCHANGE"}
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#FF5938] mb-1">
+            Return &amp; Exchange
           </p>
-          <h2 className="text-xl font-bold uppercase text-white">
+          <h2 className="text-xl font-bold text-[#181818]">
             Request for {order.order_number}
           </h2>
-          <p className="text-xs text-zinc-400 mt-1">
-            Per FLASHWEAR return policy, items must be unworn with original tags attached.
+          <p className="text-xs text-[#74716D] mt-1">
+            Items must be in original condition with tags attached.
           </p>
         </div>
 
         {successMsg && (
-          <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-lg flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {errorMsg && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
             <span>{errorMsg}</span>
           </div>
         )}
@@ -142,17 +142,17 @@ export function ReturnRequestModal({ order, isOpen, onClose }: ReturnModalProps)
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Action Type Toggle */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+            <label className="block text-xs font-medium text-[#74716D] mb-2">
               Request Type
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setRequestType("return")}
-                className={`py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${
+                className={`py-2 px-3 text-xs font-medium rounded-lg border transition-all ${
                   requestType === "return"
-                    ? "bg-[#ccff00] text-black border-[#ccff00]"
-                    : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    ? "border-[#FF5938] bg-[#FFF5F3] text-[#FF5938] font-semibold"
+                    : "border-[#E7E3DC] text-[#74716D] hover:border-[#181818]"
                 }`}
               >
                 Return for Refund
@@ -160,10 +160,10 @@ export function ReturnRequestModal({ order, isOpen, onClose }: ReturnModalProps)
               <button
                 type="button"
                 onClick={() => setRequestType("exchange")}
-                className={`py-2 text-xs font-bold uppercase tracking-wider border transition-colors ${
+                className={`py-2 px-3 text-xs font-medium rounded-lg border transition-all ${
                   requestType === "exchange"
-                    ? "bg-[#ccff00] text-black border-[#ccff00]"
-                    : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    ? "border-[#FF5938] bg-[#FFF5F3] text-[#FF5938] font-semibold"
+                    : "border-[#E7E3DC] text-[#74716D] hover:border-[#181818]"
                 }`}
               >
                 Size / Color Exchange
@@ -173,17 +173,17 @@ export function ReturnRequestModal({ order, isOpen, onClose }: ReturnModalProps)
 
           {/* Select Items */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+            <label className="block text-xs font-medium text-[#74716D] mb-2">
               Select Items
             </label>
-            <div className="space-y-2 border border-zinc-800 p-3 bg-[#18181b]">
+            <div className="space-y-2 border border-[#E7E3DC] rounded-lg p-3 bg-[#F7F5F0]">
               {order.items?.map((item) => {
                 const isSelected = Boolean(selectedItems[item.id]);
                 return (
                   <div
                     key={item.id}
-                    className={`p-3 border transition-colors ${
-                      isSelected ? "border-[#ccff00] bg-zinc-900" : "border-zinc-800"
+                    className={`p-3 rounded-lg border bg-white transition-all ${
+                      isSelected ? "border-[#FF5938] shadow-xs" : "border-[#E7E3DC]"
                     }`}
                   >
                     <label className="flex items-center gap-3 cursor-pointer">
@@ -191,23 +191,23 @@ export function ReturnRequestModal({ order, isOpen, onClose }: ReturnModalProps)
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleItem(item)}
-                        className="accent-[#ccff00] w-4 h-4"
+                        className="accent-[#FF5938] w-4 h-4"
                       />
                       <div className="flex-1 text-xs">
-                        <div className="font-bold text-white">{item.product_name}</div>
-                        <div className="text-zinc-400">
+                        <div className="font-semibold text-[#181818]">{item.product_name}</div>
+                        <div className="text-[#74716D] mt-0.5">
                           Size: {item.size} &bull; Qty: {item.quantity} &bull; {formatBDT(item.unit_price)}
                         </div>
                       </div>
                     </label>
 
                     {isSelected && requestType === "exchange" && (
-                      <div className="mt-3 pt-2 border-t border-zinc-800 flex items-center gap-2 text-xs">
-                        <span className="text-zinc-400">Target Exchange Size:</span>
+                      <div className="mt-3 pt-2 border-t border-[#E7E3DC] flex items-center gap-2 text-xs">
+                        <span className="text-[#74716D]">Target Exchange Size:</span>
                         <select
                           value={selectedItems[item.id]?.exchangeSize || "L"}
                           onChange={(e) => handleExchangeSizeChange(item.id, e.target.value)}
-                          className="bg-zinc-800 border border-zinc-700 text-white px-2 py-1 text-xs"
+                          className="bg-white border border-[#E7E3DC] rounded px-2 py-1 text-xs text-[#181818]"
                         >
                           <option value="S">S</option>
                           <option value="M">M</option>
@@ -225,13 +225,13 @@ export function ReturnRequestModal({ order, isOpen, onClose }: ReturnModalProps)
 
           {/* Reason */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+            <label className="block text-xs font-medium text-[#74716D] mb-1.5">
               Reason for Request
             </label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-[#18181b] border border-zinc-700 px-3 py-2 text-xs text-white focus:outline-none focus:border-[#ccff00]"
+              className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg px-3 py-2 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938]"
             >
               <option value="Size / Fit issue">Size / Fit issue (Too tight / too loose)</option>
               <option value="Defective or damaged">Defective or stitching damage</option>
@@ -243,30 +243,30 @@ export function ReturnRequestModal({ order, isOpen, onClose }: ReturnModalProps)
 
           {/* Comments */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
-              Customer Comments
+            <label className="block text-xs font-medium text-[#74716D] mb-1.5">
+              Additional Details
             </label>
             <textarea
               rows={2}
               value={customerNotes}
               onChange={(e) => setCustomerNotes(e.target.value)}
-              placeholder="Additional details regarding your return or exchange..."
-              className="w-full bg-[#18181b] border border-zinc-700 p-2 text-xs text-white focus:outline-none focus:border-[#ccff00]"
+              placeholder="Provide any relevant details about fit or condition..."
+              className="w-full bg-[#F7F5F0] border border-[#E7E3DC] rounded-lg p-2.5 text-xs text-[#181818] focus:outline-none focus:border-[#FF5938]"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E7E3DC]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-zinc-700 text-xs font-bold uppercase text-zinc-400 hover:text-white"
+              className="px-4 py-2 border border-[#E7E3DC] rounded-lg text-xs font-medium text-[#74716D] hover:text-[#181818]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-[#ccff00] text-black text-xs font-bold uppercase tracking-wider hover:bg-[#b8e600] disabled:opacity-50"
+              className="px-5 py-2 bg-[#FF5938] hover:bg-[#E64525] text-white text-xs font-medium rounded-lg disabled:opacity-50 transition-colors shadow-xs"
             >
               {submitting ? "Submitting..." : "Submit Request"}
             </button>

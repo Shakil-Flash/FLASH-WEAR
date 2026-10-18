@@ -28,7 +28,7 @@ export function NewsletterSection() {
       const data = await res.json();
       if (res.ok && data.success) {
         setStatus("success");
-        setMessage("You are registered for Drop 02 VIP early access.");
+        setMessage("You are subscribed to FLASHWEAR drop alerts.");
         setEmail("");
       } else {
         setStatus("error");
@@ -41,54 +41,50 @@ export function NewsletterSection() {
   };
 
   return (
-    <section className="py-20 bg-[#0d0d0f] border-b border-zinc-800">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <span className="font-mono text-xs uppercase tracking-widest text-[#ccff00]">
-          VIP Broadcast
+    <section className="py-16 sm:py-20 bg-white border-b border-[#E7E3DC]">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#FF5938]">
+          Community
         </span>
-        <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white mt-2 mb-3">
-          Get Drop Alerts 30 Minutes Before Public Release
+        <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[#181818]">
+          Stay in the loop.
         </h2>
-        <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto mb-8">
-          Limited quantity capsules sell out fast. Subscribe with your email to receive private drop links and secret release codes.
+        <p className="text-sm text-[#74716D] max-w-md mx-auto leading-relaxed">
+          Be the first to know about new drops, seasonal sales, and subscriber-only discounts. No spam, ever.
         </p>
 
-        <form onSubmit={handleSubmit} className="max-w-md mx-auto flex flex-col sm:flex-row gap-2">
+        <form onSubmit={handleSubmit} className="pt-2 max-w-md mx-auto flex flex-col sm:flex-row gap-2.5">
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email address..."
+            placeholder="Enter your email address"
             disabled={status === "loading" || status === "success"}
-            className="flex-1 bg-black border border-zinc-800 px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#ccff00]"
+            className="flex-1 bg-[#F7F5F0] border border-[#E7E3DC] rounded-md px-4 py-2.5 text-sm text-[#181818] placeholder-[#74716D] focus:outline-none focus:border-[#181818] focus:bg-white transition-colors"
           />
           <button
             type="submit"
             disabled={status === "loading" || status === "success"}
-            className="px-6 py-3 bg-[#ccff00] hover:bg-[#b8e600] text-black font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 bg-[#181818] hover:bg-[#FF5938] text-white text-xs font-semibold rounded-md flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
           >
-            {status === "loading" ? "Registering..." : "Join List"}
+            {status === "loading" ? "Subscribing..." : "Subscribe"}
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </form>
 
         {status === "success" && (
-          <div className="mt-4 flex items-center justify-center gap-2 text-xs font-mono text-[#ccff00]">
+          <div className="pt-2 flex items-center justify-center gap-2 text-xs font-medium text-emerald-700">
             <CheckCircle2 className="w-4 h-4" />
             <span>{message}</span>
           </div>
         )}
 
         {status === "error" && (
-          <div className="mt-4 flex items-center justify-center gap-2 text-xs font-mono text-red-400">
+          <div className="pt-2 flex items-center justify-center gap-2 text-xs font-medium text-red-600">
             <AlertCircle className="w-4 h-4" />
             <span>{message}</span>
           </div>
         )}
-
-        <p className="text-[10px] font-mono text-zinc-600 mt-4">
-          Strict no-spam policy. Unsubscribe anytime with 1 click.
-        </p>
       </div>
     </section>
   );

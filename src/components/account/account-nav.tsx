@@ -19,14 +19,14 @@ export function AccountNav() {
 
   return (
     <aside className="w-full md:w-64 shrink-0">
-      <div className="bg-[#121214] border border-zinc-800 p-4 sticky top-28">
-        <div className="flex items-center gap-3 pb-4 mb-4 border-b border-zinc-800">
-          <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-[#ccff00]">
+      <div className="bg-white border border-[#E7E3DC] rounded-xl p-4 sm:p-5 shadow-sm sticky top-24">
+        <div className="flex items-center gap-3 pb-4 mb-3 border-b border-[#E7E3DC]">
+          <div className="w-10 h-10 rounded-full bg-[#181818] text-white flex items-center justify-center font-bold text-xs">
             FW
           </div>
           <div className="overflow-hidden">
-            <h3 className="text-sm font-bold text-white truncate">FLASHWEAR Member</h3>
-            <p className="text-xs text-zinc-400 truncate">Customer Portal</p>
+            <h3 className="text-sm font-bold text-[#181818] truncate">FLASHWEAR Member</h3>
+            <p className="text-xs text-[#74716D] truncate">Customer Account</p>
           </div>
         </div>
 
@@ -38,13 +38,13 @@ export function AccountNav() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-3 px-3 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                className={`flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
                   isActive
-                    ? "bg-[#ccff00] text-black font-bold"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+                    ? "bg-[#181818] text-white"
+                    : "text-[#74716D] hover:text-[#181818] hover:bg-[#F7F5F0]"
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4 shrink-0" />
                 <span>{link.label}</span>
               </Link>
             );
@@ -52,9 +52,9 @@ export function AccountNav() {
 
           <Link
             href="/account/login"
-            className="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-red-400 hover:bg-zinc-900 transition-colors mt-4 border-t border-zinc-800/80 pt-3"
+            className="flex items-center gap-3 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-3 border-t border-[#E7E3DC] pt-3"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 shrink-0" />
             <span>Switch / Logout</span>
           </Link>
         </nav>

@@ -9,9 +9,7 @@ import {
   ShieldCheck,
   ArrowRight,
   ExternalLink,
-  CreditCard,
   AlertTriangle,
-  RotateCcw,
 } from "lucide-react";
 
 interface OrderConfirmationPageProps {
@@ -37,100 +35,105 @@ export default async function OrderConfirmationPage({
   const order = token ? await getOrderByNumberAndToken(params.orderNumber, token) : null;
 
   return (
-    <div className="bg-[#0a0a0b] min-h-screen py-16 text-zinc-100">
+    <div className="bg-[#F7F5F0] min-h-screen py-12 sm:py-16 text-[#181818]">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Payment Failure / Cancel Notice */}
         {paymentState === "failed" && (
-          <div className="mb-8 p-4 bg-red-950/40 border border-red-800 text-red-300 text-xs font-mono flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-400" />
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-500" />
             <div>
-              <p className="font-bold">Online Payment Declined</p>
-              <p>{failureReason || "The payment transaction could not be completed by your bank/gateway. You can retry payment or choose Cash on Delivery."}</p>
+              <p className="font-semibold">Online payment declined</p>
+              <p className="text-xs text-red-600 mt-0.5">
+                {failureReason || "The payment transaction could not be completed by your bank/gateway. You can retry payment or choose Cash on Delivery."}
+              </p>
             </div>
           </div>
         )}
 
         {paymentState === "cancelled" && (
-          <div className="mb-8 p-4 bg-amber-950/40 border border-amber-800 text-amber-300 text-xs font-mono flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 flex-shrink-0 text-amber-400" />
+          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 text-amber-600" />
             <div>
-              <p className="font-bold">Payment Cancelled</p>
-              <p>You cancelled the hosted gateway payment. Reserved inventory has been safely restored.</p>
+              <p className="font-semibold">Payment cancelled</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                You cancelled the hosted gateway payment. Reserved inventory has been safely restored.
+              </p>
             </div>
           </div>
         )}
 
         {/* Success Header */}
-        <div className="text-center space-y-4 pb-10 border-b border-zinc-800">
-          <div className="w-16 h-16 rounded-full bg-[#ccff00]/10 border-2 border-[#ccff00] flex items-center justify-center mx-auto text-[#ccff00]">
+        <div className="text-center space-y-3 pb-8 border-b border-[#E7E3DC]">
+          <div className="w-16 h-16 rounded-full bg-[#FFF5F3] border border-[#FF5938]/30 flex items-center justify-center mx-auto text-[#FF5938] shadow-sm">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div>
-            <span className="font-mono text-xs uppercase tracking-widest text-[#ccff00]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#FF5938]">
               {order?.payment_status === "paid" ? "Online Payment Confirmed" : "Order Successfully Placed"}
             </span>
-            <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white mt-1">
-              Order Received
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#181818] mt-1">
+              Thank You For Your Order
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto leading-relaxed">
-            Thank you for ordering with FLASHWEAR. Your order is registered in our inventory system and is currently being processed for dispatch.
+          <p className="text-sm text-[#74716D] max-w-lg mx-auto leading-relaxed">
+            Your pieces are registered in our inventory and are currently being prepared for dispatch.
           </p>
 
-          <div className="inline-block p-3 bg-zinc-900 border border-zinc-800 font-mono text-xs">
-            <span className="text-zinc-500">Order Reference: </span>
-            <strong className="text-white text-sm tracking-wider">{params.orderNumber}</strong>
+          <div className="inline-block mt-2 px-4 py-2 bg-white rounded-lg border border-[#E7E3DC] text-xs shadow-xs">
+            <span className="text-[#74716D]">Order reference: </span>
+            <strong className="text-[#181818] font-bold text-sm tracking-wider">{params.orderNumber}</strong>
           </div>
         </div>
 
         {/* Detailed Receipt View if valid token provided */}
         {order ? (
-          <div className="mt-10 space-y-8">
+          <div className="mt-8 space-y-6">
             {/* Status Pipeline */}
-            <div className="p-6 bg-[#111113] border border-zinc-800 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                <h2 className="text-xs font-mono uppercase tracking-widest font-bold text-white">
-                  Fulfillment Status: <span className="text-[#ccff00] uppercase">{order.status}</span>
+            <div className="p-6 bg-white border border-[#E7E3DC] rounded-xl shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-[#E7E3DC] pb-3">
+                <h2 className="text-xs uppercase tracking-wider font-bold text-[#181818]">
+                  Fulfillment Status: <span className="text-[#FF5938] capitalize">{order.status}</span>
                 </h2>
                 <span
-                  className={`text-[10px] px-2 py-0.5 uppercase font-bold ${order.payment_status === "paid"
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                    : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                    }`}
+                  className={`text-xs px-2.5 py-0.5 font-medium rounded-full ${
+                    order.payment_status === "paid"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-amber-50 text-amber-700 border border-amber-200"
+                  }`}
                 >
                   Payment: {order.payment_status}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
-                <div className="p-3 bg-zinc-900/60 border border-zinc-800">
-                  <span className="text-zinc-500 block">Payment Method</span>
-                  <strong className="text-white uppercase">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3.5 bg-[#F7F5F0] rounded-lg border border-[#E7E3DC]">
+                  <span className="text-[#74716D] block">Payment Method</span>
+                  <strong className="text-[#181818] text-sm">
                     {order.payment_method === "sslcommerz" ? "Online (SSLCOMMERZ)" : "Cash on Delivery"}
                   </strong>
                 </div>
-                <div className="p-3 bg-zinc-900/60 border border-zinc-800">
-                  <span className="text-zinc-500 block">Estimated Delivery</span>
-                  <strong className="text-white">
+                <div className="p-3.5 bg-[#F7F5F0] rounded-lg border border-[#E7E3DC]">
+                  <span className="text-[#74716D] block">Estimated Delivery</span>
+                  <strong className="text-[#181818] text-sm">
                     {order.division === "Dhaka" ? "24 - 48 Hours" : "48 - 72 Hours"}
                   </strong>
                 </div>
-                <div className="p-3 bg-zinc-900/60 border border-zinc-800">
-                  <span className="text-zinc-500 block">
-                    {order.payment_status === "paid" ? "Total Paid Online" : "Total Payable at Door"}
+                <div className="p-3.5 bg-[#F7F5F0] rounded-lg border border-[#E7E3DC]">
+                  <span className="text-[#74716D] block">
+                    {order.payment_status === "paid" ? "Total Paid Online" : "Payable at Doorstep"}
                   </span>
-                  <strong className="text-[#ccff00] text-sm">{formatBDT(order.total_amount)}</strong>
+                  <strong className="text-[#FF5938] text-base">{formatBDT(order.total_amount)}</strong>
                 </div>
               </div>
             </div>
 
             {/* Courier Tracking Details */}
             {order.courier_consignment_id && (
-              <div className="p-6 bg-[#111113] border border-zinc-800 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+              <div className="p-6 bg-white border border-[#E7E3DC] rounded-xl shadow-sm space-y-3">
+                <div className="flex items-center justify-between pb-3 border-b border-[#E7E3DC]">
                   <div className="flex items-center gap-2">
-                    <Truck className="w-4 h-4 text-[#ccff00]" />
-                    <h2 className="text-xs font-mono uppercase tracking-widest font-bold text-white">
+                    <Truck className="w-4 h-4 text-[#FF5938]" />
+                    <h2 className="text-xs uppercase tracking-wider font-bold text-[#181818]">
                       Courier Shipment Dispatched
                     </h2>
                   </div>
@@ -139,54 +142,54 @@ export default async function OrderConfirmationPage({
                       href={order.courier_tracking_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-[#ccff00] hover:underline flex items-center gap-1 font-mono uppercase font-bold"
+                      className="text-xs text-[#FF5938] hover:underline flex items-center gap-1 font-semibold"
                     >
                       <span>Track on {order.courier_name}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   )}
                 </div>
-                <div className="text-xs font-mono text-zinc-300">
-                  <p>Consignment ID: <strong className="text-[#ccff00]">{order.courier_consignment_id}</strong></p>
-                  <p>Carrier: <strong className="text-white">{order.courier_name}</strong></p>
+                <div className="text-xs text-[#181818] space-y-1">
+                  <p>Consignment ID: <strong className="text-[#FF5938]">{order.courier_consignment_id}</strong></p>
+                  <p>Carrier: <strong className="text-[#181818]">{order.courier_name}</strong></p>
                 </div>
               </div>
             )}
 
             {/* Delivery Details */}
-            <div className="p-6 bg-[#111113] border border-zinc-800 space-y-3">
-              <h2 className="text-xs font-mono uppercase tracking-widest font-bold text-white border-b border-zinc-800 pb-2">
+            <div className="p-6 bg-white border border-[#E7E3DC] rounded-xl shadow-sm space-y-3">
+              <h2 className="text-xs uppercase tracking-wider font-bold text-[#181818] border-b border-[#E7E3DC] pb-2">
                 Delivery Recipient
               </h2>
-              <div className="text-xs text-zinc-300 font-mono space-y-1">
-                <p><span className="text-zinc-500">Name:</span> {order.customer_name}</p>
-                <p><span className="text-zinc-500">Phone:</span> {order.customer_phone}</p>
+              <div className="text-xs text-[#181818] space-y-1.5 leading-relaxed">
+                <p><span className="text-[#74716D]">Name:</span> {order.customer_name}</p>
+                <p><span className="text-[#74716D]">Phone:</span> {order.customer_phone}</p>
                 {order.customer_email && (
-                  <p><span className="text-zinc-500">Email:</span> {order.customer_email}</p>
+                  <p><span className="text-[#74716D]">Email:</span> {order.customer_email}</p>
                 )}
-                <p><span className="text-zinc-500">Location:</span> {order.district}, {order.division}</p>
-                <p><span className="text-zinc-500">Address:</span> {order.delivery_address}</p>
+                <p><span className="text-[#74716D]">Location:</span> {order.district}, {order.division}</p>
+                <p><span className="text-[#74716D]">Address:</span> {order.delivery_address}</p>
               </div>
             </div>
 
             {/* Items Breakdown */}
-            <div className="p-6 bg-[#111113] border border-zinc-800 space-y-4">
-              <h2 className="text-xs font-mono uppercase tracking-widest font-bold text-white border-b border-zinc-800 pb-2">
+            <div className="p-6 bg-white border border-[#E7E3DC] rounded-xl shadow-sm space-y-4">
+              <h2 className="text-xs uppercase tracking-wider font-bold text-[#181818] border-b border-[#E7E3DC] pb-2">
                 Purchased Apparel
               </h2>
               <div className="space-y-3">
                 {order.items?.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between py-2 border-b border-zinc-800/60 text-xs"
+                    className="flex items-center justify-between py-2 border-b border-[#E7E3DC]/60 last:border-b-0 text-xs"
                   >
                     <div>
-                      <h4 className="font-semibold uppercase text-white">{item.product_name}</h4>
-                      <p className="text-[11px] font-mono text-zinc-400">
+                      <h4 className="font-semibold text-[#181818]">{item.product_name}</h4>
+                      <p className="text-[11px] text-[#74716D]">
                         Size: {item.size} • Color: {item.color} • Qty: {item.quantity}
                       </p>
                     </div>
-                    <span className="font-mono font-bold text-zinc-200">
+                    <span className="font-medium text-[#181818]">
                       {formatBDT(item.line_total)}
                     </span>
                   </div>
@@ -194,55 +197,55 @@ export default async function OrderConfirmationPage({
               </div>
 
               {/* Price summary */}
-              <div className="pt-2 space-y-1.5 text-xs font-mono">
-                <div className="flex justify-between text-zinc-400">
+              <div className="pt-3 border-t border-[#E7E3DC] space-y-1.5 text-xs">
+                <div className="flex justify-between text-[#74716D]">
                   <span>Subtotal</span>
-                  <span className="text-white">{formatBDT(order.subtotal)}</span>
+                  <span className="font-medium text-[#181818]">{formatBDT(order.subtotal)}</span>
                 </div>
                 {order.discount_amount > 0 && (
-                  <div className="flex justify-between text-emerald-400 font-bold">
+                  <div className="flex justify-between text-emerald-700 font-medium">
                     <span>Discount ({order.coupon_code || "COUPON"})</span>
                     <span>-{formatBDT(order.discount_amount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-zinc-400">
+                <div className="flex justify-between text-[#74716D]">
                   <span>Courier Delivery Fee ({order.division})</span>
-                  <span className="text-white">{formatBDT(order.delivery_fee)}</span>
+                  <span className="font-medium text-[#181818]">{formatBDT(order.delivery_fee)}</span>
                 </div>
-                <div className="flex justify-between text-white font-bold text-sm pt-2 border-t border-zinc-800">
+                <div className="flex justify-between text-[#181818] font-bold text-sm pt-2 border-t border-[#E7E3DC]">
                   <span>Total Amount</span>
-                  <span className="text-[#ccff00] text-base">{formatBDT(order.total_amount)}</span>
+                  <span className="text-[#FF5938] text-base">{formatBDT(order.total_amount)}</span>
                 </div>
               </div>
             </div>
           </div>
         ) : (
           /* Minimal Protected View if token is omitted */
-          <div className="mt-10 p-6 bg-[#111113] border border-zinc-800 text-center space-y-4">
-            <ShieldCheck className="w-8 h-8 text-[#ccff00] mx-auto" />
-            <h3 className="text-sm font-mono uppercase font-bold text-white">
+          <div className="mt-8 p-8 bg-white border border-[#E7E3DC] rounded-xl text-center space-y-3 shadow-sm">
+            <ShieldCheck className="w-8 h-8 text-[#FF5938] mx-auto" />
+            <h3 className="text-sm uppercase tracking-wider font-bold text-[#181818]">
               Private Order Summary Protected
             </h3>
-            <p className="text-xs text-zinc-400 max-w-md mx-auto">
-              Order {params.orderNumber} is registered. To view detailed customer addresses and item manifests, please open the private link provided upon checkout completion.
+            <p className="text-xs text-[#74716D] max-w-md mx-auto leading-relaxed">
+              Order {params.orderNumber} is registered. To view customer details and parcel tracking, please open the receipt link sent to your phone or email.
             </p>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             href="/account/orders"
-            className="w-full sm:w-auto px-6 py-3.5 bg-[#ccff00] hover:bg-[#b8e600] text-black font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-2 transition-colors"
+            className="w-full sm:w-auto px-6 py-3 bg-[#FF5938] hover:bg-[#E64525] text-white font-medium text-xs rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
           >
-            <span>View In My Account</span>
+            <span>View in my account</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/shop"
-            className="w-full sm:w-auto px-6 py-3.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white font-medium uppercase text-xs tracking-wider flex items-center justify-center transition-colors"
+            className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-[#F7F5F0] border border-[#E7E3DC] text-[#181818] font-medium text-xs rounded-lg flex items-center justify-center transition-colors"
           >
-            Continue Shopping
+            Continue shopping
           </Link>
         </div>
       </div>

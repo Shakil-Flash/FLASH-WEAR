@@ -1,75 +1,75 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Layers, Cpu, ShieldCheck } from "lucide-react";
+import { ArrowRight, Sparkles, Shirt, Truck } from "lucide-react";
 
 export const metadata = {
-  title: "About Us — The FLASHWEAR Ethos",
-  description: "Learn about FLASHWEAR's architectural streetwear design, heavy fabrics, and Dhaka roots.",
+  title: "About Us | FLASHWEAR",
+  description: "Learn about FLASHWEAR's approach to everyday streetwear, relaxed silhouettes, and quality essentials.",
 };
 
 export default function AboutPage() {
   return (
-    <div className="bg-[#0a0a0b] min-h-screen py-16 text-zinc-100">
+    <div className="bg-[#F7F5F0] min-h-screen py-16 sm:py-20 text-[#181818]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         {/* Title */}
-        <div className="border-b border-zinc-800 pb-8">
-          <span className="text-xs font-mono uppercase tracking-widest text-[#ccff00]">
-            Manifesto & Origins
+        <div className="border-b border-[#E7E3DC] pb-8">
+          <span className="text-xs uppercase tracking-wider font-semibold text-[#FF5938]">
+            Brand Story
           </span>
-          <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white mt-2">
-            The FLASHWEAR Blueprint
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#181818] mt-2">
+            Your Everyday, Turned Up.
           </h1>
-          <p className="text-xs font-mono text-zinc-500 mt-2">
-            Est. 2026 // Dhaka, Bangladesh
+          <p className="text-xs text-[#74716D] mt-2">
+            Independent Streetwear &bull; Est. 2026 &bull; Dhaka, Bangladesh
           </p>
         </div>
 
         {/* Narrative */}
-        <div className="space-y-6 text-sm text-zinc-300 leading-relaxed font-sans">
-          <p className="text-base text-zinc-200 font-medium">
-            FLASHWEAR was founded with a singular conviction: streetwear should not be disposable, thin, or imported without consideration of local climate and street culture.
+        <div className="space-y-6 text-base text-[#181818] leading-relaxed">
+          <p className="text-lg text-[#181818] font-medium leading-relaxed">
+            FLASHWEAR was born from a simple desire: clothes that feel good, fit right, and look effortless from morning to midnight.
           </p>
-          <p>
-            Operating out of Dhaka, Bangladesh, we engineer garments built around high-density textiles, architectural boxy fits, and modular utility hardware. Every piece is developed from the yarn up — milled with custom weights from 240 GSM combed jersey to 480 GSM French terry cotton.
+          <p className="text-[#74716D]">
+            Based in Dhaka, we build contemporary streetwear rooted in relaxed silhouettes, heavyweight custom cottons, and versatile everyday pieces. We design garments that elevate your day without overcomplicating it — boxy tees that hold their shape, fleece hoodies that feel like a second home, and cargos ready for the street.
           </p>
-          <p>
-            We reject the endless cycle of generic fast-fashion replicas. Our design philosophy draws from brutalist concrete forms, cybernetic circuit diagrams, and tactical mobility necessities.
+          <p className="text-[#74716D]">
+            We care deeply about quality, proportions, and authentic details. No shortcuts, no disposable garments, and no unnecessary gimmicks. Just honest fits crafted with personality and care.
           </p>
         </div>
 
         {/* Pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-zinc-800">
-          <div className="p-6 bg-[#111113] border border-zinc-800 space-y-3">
-            <Layers className="w-6 h-6 text-[#ccff00]" />
-            <h3 className="text-sm font-bold uppercase font-mono text-white">Heavyweight Builds</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Custom dense knits that maintain structured posture and silhouette after hundreds of wears and washes.
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-[#E7E3DC]">
+          <div className="p-6 bg-white border border-[#E7E3DC] rounded-xl shadow-sm space-y-3">
+            <Shirt className="w-6 h-6 text-[#FF5938]" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-[#181818]">Quality Textiles</h3>
+            <p className="text-xs text-[#74716D] leading-relaxed">
+              Custom-density combed cottons and heavyweight terry that keep their shape wear after wear.
             </p>
           </div>
-          <div className="p-6 bg-[#111113] border border-zinc-800 space-y-3">
-            <Cpu className="w-6 h-6 text-[#ccff00]" />
-            <h3 className="text-sm font-bold uppercase font-mono text-white">Tactical Utility</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Articulated knee darts, reverse taped zippers, hidden pockets, and modular strap integration.
+          <div className="p-6 bg-white border border-[#E7E3DC] rounded-xl shadow-sm space-y-3">
+            <Sparkles className="w-6 h-6 text-[#FF5938]" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-[#181818]">Relaxed Proportions</h3>
+            <p className="text-xs text-[#74716D] leading-relaxed">
+              Thoughtfully calibrated drop shoulders, comfortable cuts, and effortless everyday versatility.
             </p>
           </div>
-          <div className="p-6 bg-[#111113] border border-zinc-800 space-y-3">
-            <ShieldCheck className="w-6 h-6 text-[#ccff00]" />
-            <h3 className="text-sm font-bold uppercase font-mono text-white">Direct-to-Street</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              No retail middlemen markups. Fair pricing with Cash on Delivery nationwide across Bangladesh.
+          <div className="p-6 bg-white border border-[#E7E3DC] rounded-xl shadow-sm space-y-3">
+            <Truck className="w-6 h-6 text-[#FF5938]" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-[#181818]">Nationwide Access</h3>
+            <p className="text-xs text-[#74716D] leading-relaxed">
+              Fast, reliable delivery with Cash on Delivery and online payment across all 64 districts.
             </p>
           </div>
         </div>
 
-        {/* CTAs */}
-        <div className="pt-8 border-t border-zinc-800 flex justify-between items-center">
-          <span className="text-xs font-mono text-zinc-500">READY TO WEAR THE REVOLUTION?</span>
+        {/* CTA */}
+        <div className="pt-8 border-t border-[#E7E3DC] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <span className="text-xs font-medium text-[#74716D]">Find your next favorite fit today.</span>
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#ccff00] text-black font-bold uppercase text-xs tracking-wider hover:bg-[#b8e600]"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF5938] hover:bg-[#E64525] text-white font-medium text-xs rounded-lg transition-colors shadow-sm"
           >
-            <span>Explore The Catalog</span>
+            <span>Shop The Latest</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

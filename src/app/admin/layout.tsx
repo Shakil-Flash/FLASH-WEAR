@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // If on admin login page, render clean layout without sidebar
   if (pathname === "/admin/login") {
-    return <div className="min-h-screen bg-[#070708] text-zinc-100">{children}</div>;
+    return <div className="min-h-screen bg-[#F7F5F0] text-[#181818]">{children}</div>;
   }
 
   const navItems = [
@@ -52,20 +52,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#F7F5F0] text-[#181818] flex flex-col md:flex-row font-sans">
       {/* Mobile Header Bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-[#0e0e11] border-b border-zinc-800 sticky top-0 z-30">
+      <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-[#E7E3DC] sticky top-0 z-30">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-base font-black text-white">
-            FLASH<span className="text-[#ccff00]">ADMIN</span>
+          <span className="text-base font-extrabold tracking-tight text-[#181818]">
+            FLASHWEAR<span className="text-[#FF5938]">.</span>
           </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 bg-zinc-800 text-zinc-400">
-            PORTAL
+          <span className="text-[10px] uppercase font-semibold px-2 py-0.5 bg-[#F7F5F0] border border-[#E7E3DC] text-[#74716D] rounded">
+            Admin
           </span>
         </div>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-1.5 text-zinc-300 hover:text-white"
+          className="p-1.5 text-[#74716D] hover:text-[#181818]"
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -75,23 +75,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside
         className={`${
           sidebarOpen ? "block" : "hidden"
-        } md:block w-full md:w-64 bg-[#0d0d10] border-r border-zinc-800/90 flex flex-col justify-between p-6 z-20 flex-shrink-0`}
+        } md:block w-full md:w-64 bg-white border-r border-[#E7E3DC] flex flex-col justify-between p-6 z-20 flex-shrink-0`}
       >
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Admin Header */}
           <div>
-            <Link href="/admin" className="flex items-center gap-2">
-              <span className="font-mono text-lg font-black tracking-widest text-white">
-                FLASH<span className="text-[#ccff00]">ADMIN</span>
+            <Link href="/admin" className="flex items-center gap-1.5">
+              <span className="text-lg font-black tracking-tight text-[#181818]">
+                FLASHWEAR<span className="text-[#FF5938]">.</span>
+              </span>
+              <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 bg-[#F7F5F0] border border-[#E7E3DC] text-[#74716D] rounded">
+                Admin
               </span>
             </Link>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mt-1">
-              Store Command Center
+            <p className="text-[11px] text-[#74716D] mt-1">
+              Store Operations Dashboard
             </p>
           </div>
 
           {/* Navigation Links */}
-          <nav className="space-y-1.5">
+          <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -104,10 +107,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-mono uppercase tracking-wider transition-all rounded-none ${
+                  className={`flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
                     isActive
-                      ? "bg-[#ccff00] text-black font-bold shadow-sm"
-                      : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+                      ? "bg-[#181818] text-white font-semibold"
+                      : "text-[#74716D] hover:text-[#181818] hover:bg-[#F7F5F0]"
                   }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
@@ -119,11 +122,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-6 border-t border-zinc-800 space-y-3">
+        <div className="pt-6 border-t border-[#E7E3DC] space-y-2">
           <Link
             href="/"
             target="_blank"
-            className="flex items-center justify-between text-xs font-mono uppercase text-zinc-400 hover:text-white py-1.5"
+            className="flex items-center justify-between text-xs font-medium text-[#74716D] hover:text-[#181818] py-1.5"
           >
             <span>Live Storefront</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -140,7 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               localStorage.removeItem("flashwear_admin_auth");
               router.push("/admin/login");
             }}
-            className="w-full flex items-center gap-2 text-xs font-mono uppercase text-red-400 hover:text-red-300 py-1.5 text-left"
+            className="w-full flex items-center gap-2 text-xs font-medium text-red-600 hover:text-red-700 py-1.5 text-left"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
@@ -149,7 +152,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Admin Content Body */}
-      <main className="flex-1 p-6 md:p-10 overflow-x-hidden bg-[#0a0a0b]">{children}</main>
+      <main className="flex-1 p-6 md:p-10 overflow-x-hidden bg-[#F7F5F0] text-[#181818]">{children}</main>
     </div>
   );
 }
