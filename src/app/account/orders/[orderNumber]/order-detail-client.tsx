@@ -13,6 +13,7 @@ import {
   RotateCcw,
   MapPin,
   ArrowLeft,
+  HelpCircle,
 } from "lucide-react";
 
 interface Props {
@@ -262,6 +263,40 @@ export function OrderDetailClient({ order }: Props) {
               <p>{order.delivery_address}</p>
               <p>{order.district}, {order.division}</p>
               <p className="text-[#74716D] pt-1">Phone: {order.customer_phone}</p>
+            </div>
+          </div>
+
+          {/* Customer Order Help Card */}
+          <div className="bg-white border border-[#E7E3DC] rounded-xl p-6 shadow-sm space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b border-[#E7E3DC]">
+              <HelpCircle className="w-4 h-4 text-[#FF5938]" />
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[#181818]">
+                Need Help With This Order?
+              </h2>
+            </div>
+            <div className="text-xs text-[#74716D] space-y-2.5">
+              <p className="leading-relaxed">
+                To update your delivery address or contact number before dispatch, email{" "}
+                <a
+                  href={`mailto:support@flashwear.store?subject=Order%20Help%20-%20${order.order_number}`}
+                  className="text-[#181818] font-semibold underline hover:text-[#FF5938]"
+                >
+                  support@flashwear.store
+                </a>{" "}
+                or message WhatsApp <strong className="text-[#181818]">+880 1700-000000</strong> quoting Order #{order.order_number}.
+              </p>
+              {order.status !== "cancelled" && (
+                <div className="pt-2.5 border-t border-[#E7E3DC] flex items-center justify-between">
+                  <span className="text-[11px]">Size exchange or return?</span>
+                  <button
+                    onClick={() => setReturnModalOpen(true)}
+                    className="text-xs font-semibold text-[#FF5938] hover:underline inline-flex items-center gap-1"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Request Return / Exchange</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

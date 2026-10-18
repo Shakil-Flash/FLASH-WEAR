@@ -24,12 +24,12 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: true, message: "Order cancelled and inventory restored." });
     }
 
-    if (status) {
+    if (status !== undefined || trackingNumber !== undefined || adminNotes !== undefined) {
       const res = await updateAdminOrderStatus(orderId, status, trackingNumber, adminNotes);
       if (!res.success) {
         return NextResponse.json({ error: res.error }, { status: 400 });
       }
-      return NextResponse.json({ success: true, message: "Order status updated successfully." });
+      return NextResponse.json({ success: true, message: "Order updated successfully." });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });

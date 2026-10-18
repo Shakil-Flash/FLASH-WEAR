@@ -50,12 +50,14 @@ function CheckoutContent() {
     agreedToTerms: false,
   });
 
-  // Track begin checkout
+  // Track begin checkout once per checkout session
+  const hasTrackedCheckoutRef = React.useRef(false);
   useEffect(() => {
-    if (items.length > 0) {
+    if (items.length > 0 && !hasTrackedCheckoutRef.current) {
+      hasTrackedCheckoutRef.current = true;
       trackBeginCheckout(items, subtotal);
     }
-  }, []);
+  }, [items, subtotal]);
 
   // Recover abandoned cart from resume link
   useEffect(() => {

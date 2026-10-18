@@ -561,7 +561,7 @@ export async function getOrderByNumberAndToken(
         .single();
 
       if (!error && data) {
-        return data as Order;
+        return { ...(data as Order), admin_notes: null };
       }
     } catch {
       // Fallback
@@ -571,7 +571,7 @@ export async function getOrderByNumberAndToken(
   const found = fallbackOrders.find(
     (o) => o.order_number === orderNumber && o.receipt_token === receiptToken
   );
-  return found || null;
+  return found ? { ...found, admin_notes: null } : null;
 }
 
 // Order lookup by ID
@@ -627,11 +627,13 @@ export async function getCustomerOrders(userId: string): Promise<Order[]> {
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
       if (!error && data) {
-        return data as Order[];
+        return (data as Order[]).map((o) => ({ ...o, admin_notes: null }));
       }
     } catch {}
   }
-  return fallbackOrders.filter((o) => o.user_id === userId);
+  return fallbackOrders
+    .filter((o) => o.user_id === userId)
+    .map((o) => ({ ...o, admin_notes: null }));
 }
 
 // Authenticated customer: fetch specific order only if user owns it
@@ -648,12 +650,12 @@ export async function getCustomerOrderByNumber(orderNumber: string, userId: stri
         .eq("user_id", userId)
         .single();
       if (!error && data) {
-        return data as Order;
+        return { ...(data as Order), admin_notes: null };
       }
     } catch {}
   }
   const order = fallbackOrders.find((o) => o.order_number === orderNumber && o.user_id === userId);
-  return order || null;
+  return order ? { ...order, admin_notes: null } : null;
 }
 
 // Mark order as paid upon server verification
@@ -860,16 +862,16 @@ export async function getAdminOrderById(orderId: string): Promise<Order | null> 
 
 export async function updateAdminOrderStatus(
   orderId: string,
-  status: OrderStatus,
+  status?: OrderStatus,
   trackingNumber?: string,
   adminNotes?: string
 ): Promise<{ success: boolean; error?: string }> {
   if (isServiceRoleConfigured()) {
     try {
       const updateData: any = {
-        status,
         updated_at: new Date().toISOString(),
       };
+      if (status !== undefined) updateData.status = status;
       if (trackingNumber !== undefined) updateData.tracking_number = trackingNumber;
       if (adminNotes !== undefined) updateData.admin_notes = adminNotes;
 
@@ -900,7 +902,7 @@ export async function updateAdminOrderStatus(
   const order = fallbackOrders.find((o) => o.id === orderId);
   if (!order) return { success: false, error: "Order not found" };
 
-  order.status = status;
+  if (status !== undefined) order.status = status;
   if (trackingNumber !== undefined) order.tracking_number = trackingNumber;
   if (adminNotes !== undefined) order.admin_notes = adminNotes;
   order.updated_at = new Date().toISOString();

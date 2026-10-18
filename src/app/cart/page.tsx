@@ -47,12 +47,14 @@ function CartContent() {
     }
   }, [searchParams, replaceCart]);
 
-  // Track View Cart
+  // Track View Cart once per items load
+  const hasTrackedCartRef = React.useRef(false);
   useEffect(() => {
-    if (items.length > 0) {
+    if (items.length > 0 && !hasTrackedCartRef.current) {
+      hasTrackedCartRef.current = true;
       trackViewCart(items, subtotal);
     }
-  }, []);
+  }, [items, subtotal]);
 
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();

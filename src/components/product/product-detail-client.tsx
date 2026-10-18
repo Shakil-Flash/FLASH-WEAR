@@ -73,6 +73,28 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
   const [stockModalOpen, setStockModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"back_in_stock" | "price_drop">("back_in_stock");
 
+  // Auto-select a valid in-stock size when color changes to prevent disabled variant stranding
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    setErrorMsg("");
+    const validCurrentVariant = variants.find(
+      (v) => v.color === color && v.size === selectedSize && v.inventory_quantity > 0
+    );
+    if (!validCurrentVariant) {
+      const firstInStockVariant = variants.find(
+        (v) => v.color === color && v.inventory_quantity > 0
+      );
+      if (firstInStockVariant && firstInStockVariant.size) {
+        setSelectedSize(firstInStockVariant.size);
+      } else {
+        const firstVariantForColor = variants.find((v) => v.color === color);
+        if (firstVariantForColor && firstVariantForColor.size) {
+          setSelectedSize(firstVariantForColor.size);
+        }
+      }
+    }
+  };
+
   // Find exact active variant
   const currentVariant = useMemo(() => {
     return variants.find(
@@ -275,7 +297,7 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
                       return (
                         <button
                           key={color}
-                          onClick={() => setSelectedColor(color)}
+                          onClick={() => handleColorSelect(color)}
                           className={`flex items-center gap-2 px-3.5 py-2 text-xs rounded-lg border transition-all ${
                             isSelected
                               ? "border-[#181818] bg-[#181818] text-white font-medium shadow-xs"
