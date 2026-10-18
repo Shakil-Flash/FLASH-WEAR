@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { supabaseAdmin, isServiceRoleConfigured } from "../supabase/admin";
 import { isSupabaseConfigured } from "../supabase/client";
+import { verifySignedAdminToken } from "./session-token";
 
 export interface AuthUser {
   id: string;
@@ -95,15 +96,19 @@ export async function requireAdmin(
       }
     }
 
-    // Check for local dev admin cookie
+    // Check for signed admin session cookie
     try {
       const cookieStore = cookies();
-      if (cookieStore.get("flashwear_admin_session")?.value === "active") {
-        return {
-          authorized: true,
-          user: { id: "usr-admin-dev", email: "admin@flashwear.store", role: "admin" },
-          status: 200,
-        };
+      const signedCookie = cookieStore.get("flashwear_admin_session")?.value;
+      if (signedCookie) {
+        const verified = await verifySignedAdminToken(signedCookie);
+        if (verified.valid) {
+          return {
+            authorized: true,
+            user: { id: verified.userId || "usr-admin-dev", email: "admin@flashwear.store", role: "admin" },
+            status: 200,
+          };
+        }
       }
     } catch {}
 
@@ -116,6 +121,22 @@ export async function requireAdmin(
       };
     }
   }
+
+  // Check for signed admin cookie in production as well
+  try {
+    const cookieStore = cookies();
+    const signedCookie = cookieStore.get("flashwear_admin_session")?.value;
+    if (signedCookie) {
+      const verified = await verifySignedAdminToken(signedCookie);
+      if (verified.valid) {
+        return {
+          authorized: true,
+          user: { id: verified.userId || "usr-admin", email: "admin@flashwear.store", role: "admin" },
+          status: 200,
+        };
+      }
+    }
+  } catch {}
 
   // 2. Production: Strictly verify Supabase session and database admin role
   if (!isSupabaseConfigured()) {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AccountNav } from "@/components/account/account-nav";
 import { getCustomerOrders } from "@/lib/services/orders";
 import { getCustomerAddresses } from "@/lib/services/accounts";
+import { getAuthenticatedUser } from "@/lib/auth/server";
 import { formatBDT } from "@/lib/utils/format-currency";
 import { Package, MapPin, ArrowRight, ShieldCheck } from "lucide-react";
 
@@ -11,7 +12,8 @@ export const metadata = {
 };
 
 export default async function AccountPage() {
-  const userId = "usr-demo";
+  const user = await getAuthenticatedUser();
+  const userId = user?.id || "usr-demo";
   const orders = await getCustomerOrders(userId);
   const addresses = await getCustomerAddresses(userId);
   const recentOrders = orders.slice(0, 3);

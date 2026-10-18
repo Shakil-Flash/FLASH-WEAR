@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createSignedAdminToken } from "@/lib/auth/session-token";
 
 export async function POST(request: Request) {
   try {
@@ -55,8 +56,13 @@ export async function POST(request: Request) {
         );
       }
 
+      const sessionToken = await createSignedAdminToken({
+        userId: data.user.id,
+        role: "admin",
+      });
+
       const cookieStore = cookies();
-      cookieStore.set("flashwear_admin_session", "active", {
+      cookieStore.set("flashwear_admin_session", sessionToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
@@ -80,8 +86,13 @@ export async function POST(request: Request) {
         );
       }
 
+      const sessionToken = await createSignedAdminToken({
+        userId: "usr-admin-dev",
+        role: "admin",
+      });
+
       const cookieStore = cookies();
-      cookieStore.set("flashwear_admin_session", "active", {
+      cookieStore.set("flashwear_admin_session", sessionToken, {
         httpOnly: true,
         secure: false,
         sameSite: "lax",

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AccountNav } from "@/components/account/account-nav";
 import { getCustomerOrders } from "@/lib/services/orders";
+import { getAuthenticatedUser } from "@/lib/auth/server";
 import { formatBDT } from "@/lib/utils/format-currency";
 import { Package, ArrowRight } from "lucide-react";
 
@@ -10,7 +11,8 @@ export const metadata = {
 };
 
 export default async function CustomerOrdersPage() {
-  const userId = "usr-demo";
+  const user = await getAuthenticatedUser();
+  const userId = user?.id || "usr-demo";
   const orders = await getCustomerOrders(userId);
 
   return (

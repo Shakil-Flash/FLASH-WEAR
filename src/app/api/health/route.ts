@@ -47,43 +47,49 @@ export async function GET(request: Request) {
   const overallStatus = hasDatabaseError && process.env.NODE_ENV === "production" ? "degraded" : "healthy";
   const statusCode = overallStatus === "healthy" ? 200 : 503;
 
-  return NextResponse.json(
-    {
-      status: overallStatus,
-      timestamp: new Date().toISOString(),
-      latencyMs: Date.now() - startTime,
-      environment: process.env.NODE_ENV || "development",
-      version: process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0",
-      uptimeSeconds: Math.floor(process.uptime()),
-      dependencies: {
-        database: {
-          status: databaseStatus,
-          latencyMs: databaseLatencyMs,
-          mode: isSupabaseConfigured() ? "postgresql_supabase" : "in_memory_catalog",
-        },
-        paymentGateway: {
-          sslcommerzLive: envStatus.features.sslcommerzLive,
-          sslcommerzSandbox: envStatus.features.sslcommerzSandbox,
-          mockGatewayAllowed: envStatus.features.mockPaymentGatewayEnabled,
-        },
-        shippingProvider: {
-          pathaoConfigured: envStatus.features.pathaoConfigured,
-        },
-        transactionalEmail: {
-          resendConfigured: envStatus.features.emailConfigured,
-        },
-        backgroundJobs: {
-          cronSecured: envStatus.features.cronSecretConfigured,
-        },
+  // Check if caller has administrative authorization for deep diagnostics
+  const adminKey = request.headers.get("x-admin-key");
+  const configuredAdminKey = process.env.ADMIN_SECRET_KEY || "flashwear-dev-admin";
+  const isAuthorizedAdmin = adminKey === configuredAdminKey;
+
+  const responseBody: Record<string, any> = {
+    status: overallStatus,
+    timestamp: new Date().toISOString(),
+    latencyMs: Date.now() - startTime,
+    version: process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0",
+    uptimeSeconds: Math.floor(process.uptime()),
+    dependencies: {
+      database: {
+        status: databaseStatus,
+        mode: isSupabaseConfigured() ? "postgresql_supabase" : "in_memory_catalog",
       },
-      system: {
-        nodeVersion: process.version,
-        memory: {
-          rssMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
-          heapUsedMb: Math.round(process.memoryUsage().heapUsed / (1024 * 1024)),
-        },
+      paymentGateway: {
+        sslcommerzLive: envStatus.features.sslcommerzLive,
+        sslcommerzSandbox: envStatus.features.sslcommerzSandbox,
+      },
+      shippingProvider: {
+        pathaoConfigured: envStatus.features.pathaoConfigured,
+      },
+      transactionalEmail: {
+        resendConfigured: envStatus.features.emailConfigured,
+      },
+      backgroundJobs: {
+        cronSecured: envStatus.features.cronSecretConfigured,
       },
     },
-    { status: statusCode }
-  );
+  };
+
+  // Only expose internal runtime & memory metrics to authorized administrative callers
+  if (isAuthorizedAdmin) {
+    responseBody.system = {
+      nodeVersion: process.version,
+      memory: {
+        rssMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
+        heapUsedMb: Math.round(process.memoryUsage().heapUsed / (1024 * 1024)),
+      },
+      environment: process.env.NODE_ENV || "development",
+    };
+  }
+
+  return NextResponse.json(responseBody, { status: statusCode });
 }

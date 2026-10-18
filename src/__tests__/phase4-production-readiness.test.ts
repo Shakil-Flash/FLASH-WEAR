@@ -3,6 +3,10 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sanitizeData } from "@/lib/logger";
 import { validateEnvironment } from "@/lib/env";
 import { requireAdmin, requireCustomer } from "@/lib/auth/server";
+import { createSignedAdminToken, verifySignedAdminToken } from "@/lib/auth/session-token";
+import { createGuestOrder, markOrderPaid } from "@/lib/services/orders";
+import { initiateSSLCommerzPayment, validateSSLCommerzPayment } from "@/lib/payments/sslcommerz";
+import { GET as healthRoute } from "@/app/api/health/route";
 
 describe("Phase 4: Production Readiness, Security & Reliability", () => {
   beforeEach(() => {
@@ -127,6 +131,177 @@ describe("Phase 4: Production Readiness, Security & Reliability", () => {
       const auth = await requireCustomer(req);
       expect(auth.authorized).toBe(true);
       expect(auth.user?.id).toBe("usr-test-customer-42");
+    });
+  });
+
+  describe("5. Cryptographic Admin Session Tokens", () => {
+    it("issues and verifies a valid signed admin session token", async () => {
+      const token = await createSignedAdminToken({
+        userId: "admin-user-001",
+        role: "admin",
+      });
+
+      expect(typeof token).toBe("string");
+      expect(token.split(":").length).toBe(4);
+
+      const verification = await verifySignedAdminToken(token);
+      expect(verification.valid).toBe(true);
+      expect(verification.userId).toBe("admin-user-001");
+      expect(verification.role).toBe("admin");
+    });
+
+    it("rejects a tampered session token signature", async () => {
+      const token = await createSignedAdminToken({
+        userId: "admin-user-001",
+        role: "admin",
+      });
+
+      const parts = token.split(":");
+      parts[3] = parts[3].replace(/[0-9a-f]/, "z"); // tamper signature
+      const tampered = parts.join(":");
+
+      const verification = await verifySignedAdminToken(tampered);
+      expect(verification.valid).toBe(false);
+      expect(verification.error).toBeDefined();
+    });
+
+    it("rejects an expired admin session token", async () => {
+      const expiredToken = await createSignedAdminToken({
+        userId: "admin-user-001",
+        role: "admin",
+        maxAgeMs: -1000, // already expired
+      });
+
+      const verification = await verifySignedAdminToken(expiredToken);
+      expect(verification.valid).toBe(false);
+      expect(verification.error).toContain("expired");
+    });
+
+    it("rejects a token claiming non-admin role", async () => {
+      const nonAdminToken = await createSignedAdminToken({
+        userId: "customer-999",
+        role: "customer",
+      });
+
+      const verification = await verifySignedAdminToken(nonAdminToken);
+      expect(verification.valid).toBe(false);
+      expect(verification.error).toContain("Insufficient role");
+    });
+
+    it("rejects arbitrary plain strings like active", async () => {
+      const verification = await verifySignedAdminToken("active");
+      expect(verification.valid).toBe(false);
+    });
+  });
+
+  describe("6. Payment Idempotency & Replay Protection", () => {
+    it("safely handles repeated markOrderPaid calls without error or state corruption", async () => {
+      const orderRes = await createGuestOrder({
+        customerName: "Idempotent Buyer",
+        customerPhone: "01799887766",
+        division: "Dhaka",
+        district: "Dhaka",
+        deliveryAddress: "Banani DOHS",
+        items: [{ variantId: "var-1", quantity: 1 }],
+        paymentMethod: "sslcommerz",
+      });
+
+      expect(orderRes.success).toBe(true);
+      const orderId = orderRes.orderId!;
+
+      // First payment callback
+      const call1 = await markOrderPaid(orderId, {
+        tranId: "TX-TEST-IDEMP-01",
+        valId: "VAL-TEST-01",
+        amount: 2500,
+        cardType: "VISA",
+      });
+      expect(call1.success).toBe(true);
+
+      // Replayed callback or duplicate IPN
+      const call2 = await markOrderPaid(orderId, {
+        tranId: "TX-TEST-IDEMP-01",
+        valId: "VAL-TEST-01",
+        amount: 2500,
+        cardType: "VISA",
+      });
+      expect(call2.success).toBe(true);
+    });
+  });
+
+  describe("7. Production Gateway Protection", () => {
+    it("strictly blocks mock payment gateway initiation when in production without override", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      const originalAllowMock = process.env.ENABLE_MOCK_PAYMENT_GATEWAY;
+
+      try {
+        (process.env as any).NODE_ENV = "production";
+        delete process.env.ENABLE_MOCK_PAYMENT_GATEWAY;
+
+        const res = await initiateSSLCommerzPayment({
+          orderId: "ord-prod-guard",
+          orderNumber: "FW-PROD-001",
+          totalAmount: 1500,
+          customerName: "Prod Tester",
+          customerPhone: "01711223344",
+          deliveryAddress: "Gulshan-1, Dhaka",
+          division: "Dhaka",
+          district: "Dhaka",
+        });
+
+        expect(res.success).toBe(false);
+        expect(res.error).toContain("Online payment gateway is not configured for production");
+      } finally {
+        (process.env as any).NODE_ENV = originalEnv;
+        if (originalAllowMock !== undefined) {
+          process.env.ENABLE_MOCK_PAYMENT_GATEWAY = originalAllowMock;
+        }
+      }
+    });
+
+    it("strictly blocks mock payment validation in production without override", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      const originalAllowMock = process.env.ENABLE_MOCK_PAYMENT_GATEWAY;
+
+      try {
+        (process.env as any).NODE_ENV = "production";
+        delete process.env.ENABLE_MOCK_PAYMENT_GATEWAY;
+
+        const res = await validateSSLCommerzPayment("VAL-MOCK-TEST", "TRAN-NONEXISTENT");
+        expect(res.isValidated).toBe(false);
+      } finally {
+        (process.env as any).NODE_ENV = originalEnv;
+        if (originalAllowMock !== undefined) {
+          process.env.ENABLE_MOCK_PAYMENT_GATEWAY = originalAllowMock;
+        }
+      }
+    });
+  });
+
+  describe("8. Health Check Infrastructure Privacy", () => {
+    it("omits internal node version and memory heap stats for unauthenticated requests", async () => {
+      const req = new Request("http://localhost:3000/api/health?type=readiness");
+      const res = await healthRoute(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data).toHaveProperty("status");
+      expect(data).toHaveProperty("dependencies");
+      // System diagnostics must not be exposed to unauthenticated callers
+      expect(data.system).toBeUndefined();
+    });
+
+    it("provides system diagnostics to authorized administrative requests", async () => {
+      const req = new Request("http://localhost:3000/api/health?type=readiness", {
+        headers: { "x-admin-key": "flashwear-dev-admin" },
+      });
+      const res = await healthRoute(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data).toHaveProperty("system");
+      expect(data.system).toHaveProperty("nodeVersion");
+      expect(data.system).toHaveProperty("memory");
     });
   });
 });

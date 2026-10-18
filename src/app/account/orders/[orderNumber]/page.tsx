@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AccountNav } from "@/components/account/account-nav";
 import { getCustomerOrderByNumber, getOrderByNumberAndToken } from "@/lib/services/orders";
+import { getAuthenticatedUser } from "@/lib/auth/server";
 import { OrderDetailClient } from "./order-detail-client";
 
 interface Props {
@@ -17,7 +18,8 @@ export async function generateMetadata({ params }: Props) {
 export default async function OrderDetailPage({ params, searchParams }: Props) {
   const { orderNumber } = params;
   const token = searchParams.token;
-  const userId = "usr-demo";
+  const user = await getAuthenticatedUser();
+  const userId = user?.id || "usr-demo";
 
   let order = await getCustomerOrderByNumber(orderNumber, userId);
 

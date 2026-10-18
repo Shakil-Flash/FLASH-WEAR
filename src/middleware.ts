@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { verifySignedAdminToken } from "@/lib/auth/session-token";
 
 // Rate limit configurations by endpoint prefix
 const RATE_LIMIT_RULES: Record<string, { limit: number; windowMs: number }> = {
@@ -63,12 +64,14 @@ export async function middleware(request: NextRequest) {
   // 3. Admin route guard (browser pages)
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     const adminSession = request.cookies.get("flashwear_admin_session");
+    const sessionVerification = await verifySignedAdminToken(adminSession?.value);
 
-    // In non-production, allow access if dev mode bypass is enabled or cookie is active
+    // Enforce cryptographic token verification in all environments
+    // In dev mode, allow bypass only if explicit DEV_ADMIN_BYPASS is set
     const isDev = process.env.NODE_ENV !== "production";
-    const hasActiveSession = adminSession?.value === "active";
+    const allowDevBypass = isDev && process.env.DEV_ADMIN_BYPASS === "true";
 
-    if (!hasActiveSession && !isDev) {
+    if (!sessionVerification.valid && !allowDevBypass) {
       const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("from", pathname);
       return NextResponse.redirect(loginUrl);

@@ -668,6 +668,18 @@ export async function markOrderPaid(
 ): Promise<{ success: boolean; error?: string }> {
   if (isServiceRoleConfigured()) {
     try {
+      // 1. Idempotency Check: Verify if order is already marked paid
+      const { data: existingOrder } = await supabaseAdmin
+        .from("orders")
+        .select("id, order_number, payment_status, customer_email, customer_name, total_amount")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      if (existingOrder && existingOrder.payment_status === "paid") {
+        // Idempotent: Order is already paid. Skip duplicate database update & duplicate email notification.
+        return { success: true };
+      }
+
       const { error } = await supabaseAdmin
         .from("orders")
         .update({
@@ -678,6 +690,17 @@ export async function markOrderPaid(
         .eq("id", orderId);
 
       if (error) return { success: false, error: error.message };
+
+      if (existingOrder?.customer_email) {
+        sendPaymentSuccessEmail({
+          orderNumber: existingOrder.order_number,
+          customerName: existingOrder.customer_name,
+          customerEmail: existingOrder.customer_email,
+          amount: details.amount || existingOrder.total_amount,
+          tranId: details.tranId,
+          paymentChannel: details.cardType || "Online Gateway",
+        }).catch((err) => console.warn("Payment confirmation email warning:", err));
+      }
     } catch (err: any) {
       return { success: false, error: err.message };
     }
@@ -685,6 +708,11 @@ export async function markOrderPaid(
 
   const order = fallbackOrders.find((o) => o.id === orderId);
   if (order) {
+    if (order.payment_status === "paid") {
+      // Idempotent guard for in-memory fallback orders
+      return { success: true };
+    }
+
     order.payment_status = "paid";
     if (order.status === "pending") order.status = "confirmed";
     order.updated_at = new Date().toISOString();
